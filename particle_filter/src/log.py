@@ -1,6 +1,10 @@
 """
 Classes for organizing different log files.
 """
+import pdb
+from decimal import Decimal
+D = Decimal
+
 class Odometry:
     """
     Odometry data type. Contains x, y, theta, and timestamp data, all in
@@ -15,7 +19,7 @@ class Odometry:
 
         O -94.234001 -139.953995 -1.342158 0.025863
         """
-        self.x, self.y, self.theta, self.ts = line.split()[1:]
+        self.x, self.y, self.theta, self.ts = map(D, line.split()[1:])
 
 
 class Laser:
@@ -32,10 +36,10 @@ class Laser:
         L -94.234001 -139.953995 -1.342158 -88.567719 -164.303391 -1.342158 66
         66 66 ....
         """
-        data = line.split()
-        self.distances = data[7:-1]
-        self.x, self.y, self.theta = data[1:4]
-        self.x_l, self.y_l, self.theta_l = data[4:7]
+        data = map(D, line.split()[1:])
+        self.distances = data[6:-1]
+        self.x, self.y, self.theta = data[0:3]
+        self.x_l, self.y_l, self.theta_l = data[3:6]
         self.ts = data[-1]
 
 class Log:
@@ -60,4 +64,5 @@ class Log:
 
 if __name__ == "__main__":
     l = Log('../data/log/robotdata1.log')
+    pdb.set_trace()
 

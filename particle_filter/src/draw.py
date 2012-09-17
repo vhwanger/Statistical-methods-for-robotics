@@ -1,9 +1,6 @@
-import pylab
 import numpy
-import pdb
-import matplotlib.pyplot as plt
+import Image
 
-img = numpy.random.rand(100,100)
-plt.imshow(img)
-plt.axis('off')
-plt.savefig('test.png')
+
+img = Image.fromarray(numpy.random.rand(100,100) * 255)
+img.convert('RGB').save("test.png")

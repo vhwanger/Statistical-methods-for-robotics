@@ -2,8 +2,14 @@
 This module handles all map information that comes from the wean.dat file.
 """
 import re
+import numpy as np
+import Image
+import pdb
+from decimal import Decimal 
+D = Decimal
 
 DEBUG = True
+MAX_DISTANCE = 8183 # in centimeters
 
 class ParameterException(Exception): pass
 class MapDataException(Exception): pass
@@ -74,7 +80,7 @@ class Map:
             if line.strip():
                 if re.compile('[a-zA-Z]').findall(line):
                     continue
-                points = line.split()
+                points = [D(p) for p in line.split()]
                 if len(points) != self.num_columns:
                     print line
                     raise MapDataException("Line has incorrect number of data "
@@ -82,7 +88,14 @@ class Map:
                                            (self.num_columns, len(points)))
                 self.map.append(points)
 
+    def expected_distance(self, x, y, theta):
+        pass
 
 if __name__ == '__main__':
     wean_map = Map('../data/map/wean.dat')
+    np_array = np.array(wean_map.map)
+    np_array *= 255
+    np_array = np_array.clip(min=0)
+    img = Image.fromarray(np.transpose(np.uint8(np_array)))
+    img.convert('RGB').save("test.png")
     
