@@ -6,12 +6,11 @@ import math
 import pdb
 import numpy as np
 import Image
-import matplotlib.pyplot as plt
 from decimal import Decimal 
 D = Decimal
 
 DEBUG = True
-MAX_DISTANCE = 8183 # in centimeters
+MAX_DISTANCE_CM = 8183. # in centimeters
 
 class ParameterException(Exception): pass
 class MapDataException(Exception): pass
@@ -154,7 +153,7 @@ class Map:
         particular ray hits a wall.
         """
         resolution = self.parameters['resolution']
-        distance_steps = np.arange(5, 8185/resolution);
+        distance_steps = np.arange(5, MAX_DISTANCE_CM/resolution);
         angles = np.arange(1, 180, angle_interval) + theta
 
         cosvfunc = np.vectorize(lambda deg: math.cos(math.radians(deg)))
