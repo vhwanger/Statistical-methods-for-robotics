@@ -3,6 +3,7 @@ Classes for organizing different log files.
 """
 import pdb
 from decimal import Decimal
+from constants import LIDAR_ANGLE_INTERVAL
 D = Decimal
 
 class Odometry:
@@ -44,6 +45,10 @@ class Laser:
         """
         data = map(D, line.split()[1:])
         self.distances = data[6:-1]
+
+        # let's remove the angle readings we don't care about
+        self.distances = self.distances[::LIDAR_ANGLE_INTERVAL]
+
         self.x, self.y, self.theta = data[0:3]
         self.x_l, self.y_l, self.theta_l = data[3:6]
         self.ts = data[-1]

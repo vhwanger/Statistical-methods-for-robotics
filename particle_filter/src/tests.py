@@ -71,7 +71,7 @@ class TestParticleFilter(unittest.TestCase):
         self.pf = ParticleFilter()
 
     def testInitialization(self):
-        print self.pf.particles
+        self.pf.run()
 
 if __name__ == '__main__':
     unittest.main()

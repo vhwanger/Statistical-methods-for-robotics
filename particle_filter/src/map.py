@@ -6,12 +6,11 @@ import math
 import pdb
 import numpy as np
 import Image
+from constants import LIDAR_ANGLE_INTERVAL, MAX_DISTANCE_CM
 from decimal import Decimal 
 D = Decimal
 
 DEBUG = True
-MAX_DISTANCE_CM = 8183. # in centimeters
-LIDAR_ANGLE_INTERVAL = 10
 
 class ParameterException(Exception): pass
 class MapDataException(Exception): pass
@@ -101,7 +100,8 @@ class Map:
         probabilities in the map.
         """
         points = np.where(self.map > 0)
-        return zip(points[0], points[1])
+        return zip(points[0] * self.parameters['resolution'], 
+                   points[1] * self.parameters['resolution'])
 
     def ray_trace(self, x, y, rays):
         """
@@ -126,10 +126,12 @@ class Map:
         resolution = self.parameters['resolution']
         for ray in rays:
             for coord in ray[0]:
-                map_value = self.map[coord[0]][coord[1]]
-                if coord[0] < 800 and coord[1] < 800 and map_value >0:
-                    distance = math.sqrt((coord[0]- x/resolution)**2 + 
-                                         (coord[1] - y/resolution)**2)
+                distance = 0
+                if coord[0] < 800 and coord[1] < 800:
+                    map_value = self.map[coord[0]][coord[1]]
+                    if map_value >0:
+                        distance = math.sqrt((coord[0]- x/resolution)**2 + 
+                                             (coord[1] - y/resolution)**2)
                 else:
                     break
             ray_distances.append(distance)
