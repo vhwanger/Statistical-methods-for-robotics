@@ -11,6 +11,7 @@ D = Decimal
 
 DEBUG = True
 MAX_DISTANCE_CM = 8183. # in centimeters
+LIDAR_ANGLE_INTERVAL = 10
 
 class ParameterException(Exception): pass
 class MapDataException(Exception): pass
@@ -94,6 +95,14 @@ class Map:
                 row_counter += 1
 
     
+    def open_cells(self):
+        """
+        Returns all locations where the robot could be based on the
+        probabilities in the map.
+        """
+        points = np.where(self.map > 0)
+        return zip(points[0], points[1])
+
     def ray_trace(self, x, y, rays):
         """
         This takes in the location of the robot and a list of rays. The rays
@@ -127,7 +136,7 @@ class Map:
         return ray_distances
 
 
-    def expected_distance(self, x, y, theta, angle_interval=10):
+    def expected_distance(self, x, y, theta):
         """
         This does ray-tracing for determining the expected distance of the lidar
         at any given point. The lidar has 180 beams that come out of it, and for
@@ -149,12 +158,12 @@ class Map:
          sin(theta_180)]
 
         Then we floor these values to get it into real pixel coordinates, and
-        then we do a massive lookup against the table to determine when a
-        particular ray hits a wall.
+        then we do a lookup against the table to determine when a particular ray
+        hits a wall (self.ray_trace).
         """
         resolution = self.parameters['resolution']
         distance_steps = np.arange(5, MAX_DISTANCE_CM/resolution);
-        angles = np.arange(1, 180, angle_interval) + theta
+        angles = np.arange(1, 180, LIDAR_ANGLE_INTERVAL) + theta
 
         cosvfunc = np.vectorize(lambda deg: math.cos(math.radians(deg)))
         cos_angles = cosvfunc(angles)
@@ -169,6 +178,7 @@ class Map:
         x_coords = floorvfunc(x_coords)
         y_coords = floorvfunc(y_coords)
         
+        # creates a data structure that's easy for self.ray_trace to use
         rays = []
         for (i, angle) in zip(range(len(x_coords)), angles):
             rays.append((zip(x_coords[i, 0:], y_coords[i, 0:]), angle))

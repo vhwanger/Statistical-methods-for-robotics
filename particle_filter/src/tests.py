@@ -3,7 +3,7 @@ import math
 import pdb
 import matplotlib.pyplot as plt
 from map import Map
-from particle import SensorModel
+from particle import SensorModel, ParticleFilter
 
 class TestMapFunctions(unittest.TestCase):
     def setUp(self):
@@ -37,7 +37,7 @@ class TestMapFunctions(unittest.TestCase):
 
 class TestSensorModel(unittest.TestCase):
     def setUp(self):
-        self.sm = SensorModel()
+        self.sm = SensorModel(4000)
         self.fig = plt.figure(1)
 
     def testErrors(self):
@@ -62,10 +62,16 @@ class TestSensorModel(unittest.TestCase):
         plt.plot(self.sm.x,y) 
 
         plt.figure(2)
-        y = self.sm.sensor_model(4000, 4000)
+        y = self.sm.y
         plt.plot(self.sm.x, y)
         plt.show()
 
+class TestParticleFilter(unittest.TestCase):
+    def setUp(self):
+        self.pf = ParticleFilter()
+
+    def testInitialization(self):
+        print self.pf.particles
 
 if __name__ == '__main__':
     unittest.main()

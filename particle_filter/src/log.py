@@ -13,6 +13,9 @@ class Odometry:
     def __init__(self, line):
         self.parse(line)
 
+    def __repr__(self):
+        return "Odometry: %s %s %s %s" % (self.x, self.y, self.theta, self.ts)
+
     def parse(self, line):
         """
         Each line looks like:
@@ -29,6 +32,9 @@ class Laser:
     """
     def __init__(self, line):
         self.parse(line)
+
+    def __repr__(self):
+        return "Laser: %s %s %s %s" % (self.x, self.y, self.theta, self.ts)
 
     def parse(self, line):
         """
@@ -61,8 +67,11 @@ class Log:
             elif line[0] == "L":
                 self.data.append(Laser(line))
 
+    def iterator(self):
+        for data in self.data:
+            yield data
+
 
 if __name__ == "__main__":
     l = Log('../data/log/robotdata1.log')
-    pdb.set_trace()
 
