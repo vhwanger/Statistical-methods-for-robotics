@@ -20,9 +20,6 @@ class ParticleFilter:
             idx = random.randint(1, len(open_cells))
             self.particles.append(Particle(*open_cells[idx], map=self.wean_map))
 
-        if DEBUG:
-            print self.particles
-
     def normalize_particle_weights(self):
         total = 0
         for p in self.particles:
@@ -62,7 +59,6 @@ class Particle:
                                                                  self.theta)
         
         self.weight = 1
-        print "computing weight"
         for (exp_dist, act_dist) in zip(expected_distances,
                                         laser_entry.distances):
             sm = SensorModel(exp_dist)
@@ -110,7 +106,7 @@ class SensorModel:
         """
         Uniform noise across the entire range of readings
         """
-        y = np.array([1 / MAX_DISTANCE_CM] * len(self.x))
+        y = np.array([1. / MAX_DISTANCE_CM] * len(self.x))
         return y
 
     def short_noise(self, expected_distance):
