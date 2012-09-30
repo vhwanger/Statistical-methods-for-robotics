@@ -53,6 +53,7 @@ class Laser:
         self.x_l, self.y_l, self.theta_l = data[3:6]
         self.ts = data[-1]
 
+
 class Log:
     """
     Populated with odometry and laser data by initializing with the filename of
@@ -64,6 +65,7 @@ class Log:
         f = open(filename, 'r')
         lines = f.readlines()
         self.parse(lines)
+        self.prev_odometry = None
 
     def parse(self, lines):
         for line in lines:
@@ -73,7 +75,28 @@ class Log:
                 self.data.append(Laser(line))
 
     def iterator(self):
+        """
+        This iterator returns all the log data from a particular field.  For
+        odometry data, it adds the distance the robot has moved to the odometry
+        object. The log data normally comes out as coordinates, but we actually
+        care about the delta between two sets of odometry data.
+
+        If it's laser data, it just spits it out as-is.
+        """
         for data in self.data:
+            if isinstance(data, Odometry) and self.prev_odometry is None:
+                delta = {'delta_x': 0, 
+                         'delta_y': 0, 
+                         'delta_theta': 0}
+                data.delta = delta
+                self.prev_odometry = data
+            elif isinstance(data, Odometry) and self.prev_odometry:
+                delta = {'delta_x': data.x - self.prev_odometry.x,
+                         'delta_y': data.y - self.prev_odometry.y,
+                         'delta_theta': data.theta - self.prev_odometry.theta}
+                data.delta = delta
+                self.prev_odometry = data
+
             yield data
 
 

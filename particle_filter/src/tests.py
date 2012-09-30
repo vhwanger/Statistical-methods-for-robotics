@@ -50,32 +50,6 @@ class TestSensorModel(unittest.TestCase):
         plt.show()
 
 
-    #def testErrors(self):
-    #    y= self.sm.random_noise()
-    #    plt.subplot(2, 2, 1)
-    #    plt.title('Uniform error')
-    #    plt.plot(self.sm.x,y) 
-
-    #    y= self.sm.sensor_noise(4000)
-    #    plt.subplot(2,2,2)
-    #    plt.title('Gaussian sensor error')
-    #    plt.plot(self.sm.x,y) 
-
-    #    y = self.sm.short_noise(4000)
-    #    plt.subplot(2,2,3)
-    #    plt.title('Short distance error')
-    #    plt.plot(self.sm.x,y) 
-
-    #    y = self.sm.max_noise()
-    #    plt.subplot(224)
-    #    plt.title('Max reading error')
-    #    plt.plot(self.sm.x,y) 
-
-    #    plt.figure(2)
-    #    y = self.sm.y
-    #    plt.plot(self.sm.x, y)
-    #    plt.show()
-
 class TestParticleFilter(unittest.TestCase):
     def setUp(self):
         self.pf = ParticleFilter()
