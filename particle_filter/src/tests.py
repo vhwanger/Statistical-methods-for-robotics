@@ -1,7 +1,9 @@
 import unittest
 import math
 import pdb
+import numpy as np
 import matplotlib.pyplot as plt
+from constants import MAX_DISTANCE_CM
 from map import Map
 from particle import SensorModel, ParticleFilter
 
@@ -37,34 +39,42 @@ class TestMapFunctions(unittest.TestCase):
 
 class TestSensorModel(unittest.TestCase):
     def setUp(self):
-        self.sm = SensorModel(4000)
         self.fig = plt.figure(1)
 
-    def testErrors(self):
-        y= self.sm.random_noise()
-        plt.subplot(2, 2, 1)
-        plt.title('Uniform error')
-        plt.plot(self.sm.x,y) 
-
-        y= self.sm.sensor_noise(4000)
-        plt.subplot(2,2,2)
-        plt.title('Gaussian sensor error')
-        plt.plot(self.sm.x,y) 
-
-        y = self.sm.short_noise(4000)
-        plt.subplot(2,2,3)
-        plt.title('Short distance error')
-        plt.plot(self.sm.x,y) 
-
-        y = self.sm.max_noise()
-        plt.subplot(224)
-        plt.title('Max reading error')
-        plt.plot(self.sm.x,y) 
-
-        plt.figure(2)
-        y = self.sm.y
-        plt.plot(self.sm.x, y)
+    def testNewErrors(self):
+        y = []
+        x = np.arange(1, MAX_DISTANCE_CM + 1)
+        for i in x:
+            y.append(SensorModel.sample_observation(i, 4000))
+        plt.plot(x, y)
         plt.show()
+
+
+    #def testErrors(self):
+    #    y= self.sm.random_noise()
+    #    plt.subplot(2, 2, 1)
+    #    plt.title('Uniform error')
+    #    plt.plot(self.sm.x,y) 
+
+    #    y= self.sm.sensor_noise(4000)
+    #    plt.subplot(2,2,2)
+    #    plt.title('Gaussian sensor error')
+    #    plt.plot(self.sm.x,y) 
+
+    #    y = self.sm.short_noise(4000)
+    #    plt.subplot(2,2,3)
+    #    plt.title('Short distance error')
+    #    plt.plot(self.sm.x,y) 
+
+    #    y = self.sm.max_noise()
+    #    plt.subplot(224)
+    #    plt.title('Max reading error')
+    #    plt.plot(self.sm.x,y) 
+
+    #    plt.figure(2)
+    #    y = self.sm.y
+    #    plt.plot(self.sm.x, y)
+    #    plt.show()
 
 class TestParticleFilter(unittest.TestCase):
     def setUp(self):

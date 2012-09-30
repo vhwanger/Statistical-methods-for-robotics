@@ -59,10 +59,9 @@ class Particle:
                                                                  self.theta)
         
         self.weight = 1
-        for (exp_dist, act_dist) in zip(expected_distances,
-                                        laser_entry.distances):
-            sm = SensorModel(exp_dist)
-            self.weight *= sm.sample_observation(act_dist)
+        for (exp_dist, act_dist) in zip(expected_distances, laser_entry.distances):
+            self.weight *= SensorModel.sample_observation(float(str(act_dist)), exp_dist)
+            print self.weight
 
         return
 
@@ -70,66 +69,50 @@ class SensorModel:
     """
     Creates each aspect of our hybrid sensor model
     """
-    def __init__(self, expected_distance):
-        self.x = np.arange(1,MAX_DISTANCE_CM, 10)
-        self.y = (ZHIT * self.sensor_noise(expected_distance) + 
-             ZNOISE * self.random_noise() +
-             ZSHORT * self.short_noise(expected_distance) +
-             ZMAX * self.max_noise())
-        self.y /= sum(self.y)
-        return
+    @classmethod
+    def sample_observation(self, meas_dist, expected_distance):
+        value = (ZHIT * self.sensor_noise(meas_dist, expected_distance) +
+                 ZNOISE * self.random_noise() +
+                 ZSHORT * self.short_noise(meas_dist, expected_distance) +
+                 ZMAX * self.max_noise(meas_dist))
+        return value
 
-    def sample_observation(self, measured_distance):
-        try:
-            return self.y[measured_distance / 10]
-        except IndexError:
-            raise Exception("Trying to sample out of bounds: %s" %
-                            measured_distance)
-
-    def sensor_noise(self, expected_distance):
+    @classmethod
+    def sensor_noise(self, meas_dist, expected_distance):
         """
         Gaussian noise centered around the expected distance
         """
         sigma = 200
         mu = expected_distance
 
-        def gaussian(x):
-            norm = 1/(sigma * np.sqrt(2 * np.pi))
-            v = norm * np.exp(-.5*((x-mu)/sigma)**2)
-            return v
+        norm = 1/(sigma * np.sqrt(2 * np.pi))
+        v = norm * np.exp(-.5*((meas_dist-mu)/sigma)**2)
+        return v
 
-        expvfunc = np.vectorize(gaussian)
-        y = expvfunc(self.x)
-        return y
-
+    @classmethod
     def random_noise(self):
         """
         Uniform noise across the entire range of readings
         """
-        y = np.array([1. / MAX_DISTANCE_CM] * len(self.x))
+        y = 1. / MAX_DISTANCE_CM
         return y
 
-    def short_noise(self, expected_distance):
+    @classmethod
+    def short_noise(self, meas_dist, expected_distance):
         """
         Noise associated with random objects in from of the expected_distance
         """
-        def vfunc(x):
-            norm = 1/(1-np.exp(-SHORT_NOISE_LAMBDA*expected_distance))
-            if x < expected_distance:
-                return (SHORT_NOISE_LAMBDA * np.exp(-1 * SHORT_NOISE_LAMBDA * x)
-                        * norm)
-            else:
-                return 0
+        norm = 1/(1-np.exp(-SHORT_NOISE_LAMBDA*expected_distance))
+        if meas_dist < expected_distance:
+            return (SHORT_NOISE_LAMBDA * np.exp(-1 * SHORT_NOISE_LAMBDA *
+                                                meas_dist) * norm)
+        else:
+            return 0
 
-        shortvfunc = np.vectorize(vfunc)
-        y = shortvfunc(self.x)
-        return y
-
-    def max_noise(self):
+    @classmethod
+    def max_noise(self, meas_dist):
         """
         Max noise at the very last reading possible
         """
-        y = [0.] * len(self.x)
-        y[-1] = 1.
-        return np.array(y)
+        return 1 if  meas_dist == MAX_DISTANCE_CM else 0
 
