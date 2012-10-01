@@ -95,7 +95,7 @@ class Map:
         Returns all locations where the robot could be based on the
         probabilities in the map.
         """
-        points = np.where(self.map > 0)
+        points = np.where(self.map > .8)
         return zip(points[0] * self.parameters['resolution'], 
                    points[1] * self.parameters['resolution'])
 

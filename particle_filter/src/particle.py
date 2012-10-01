@@ -18,7 +18,10 @@ class ParticleFilter:
         """
         plt.ion()
         self.figure = plt.figure()
+        plt.imshow(plt.imread('map.png'))
+        plt.axis([0,800,0,800])
         self.ax = self.figure.add_subplot(111)
+        self.line, = plt.plot([], [])
         self.wean_map = Map('../data/map/wean.dat')
         log_file = Log('../data/log/robotdata1.log')
         self.log_entries = log_file.iterator()
@@ -52,7 +55,9 @@ class ParticleFilter:
                          [p.y / resolution for p in self.particles],
                          'g.',
                          markersize=10)
-        plt.pause(.1)
+        #self.line.set_xdata([p.x / resolution for p in self.particles])
+        #self.line.set_ydata([p.y / resolution for p in self.particles])
+        plt.pause(.01)
 
     def run(self):
         """
