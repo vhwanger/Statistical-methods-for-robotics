@@ -6,7 +6,7 @@ import math
 import pdb
 import numpy as np
 import Image
-from constants import LIDAR_ANGLE_INTERVAL, MAX_DISTANCE_CM
+from constants import (LIDAR_ANGLE_INTERVAL, MAX_DISTANCE_CM, INIT_THRESHOLD)
 from decimal import Decimal 
 D = Decimal
 
@@ -76,10 +76,11 @@ class Map:
         Reads in the probabilities from the map and stores it in a two
         dimenional array in self.map
         """
+        search = re.compile('[a-zA-Z]')
         row_counter = 0
         for (num_line, line) in enumerate(lines):
             if line.strip():
-                if re.compile('[a-zA-Z]').findall(line):
+                if search.findall(line):
                     continue
                 points = np.array(map(float, line.split()))
                 if len(points) != self.num_columns:
@@ -95,7 +96,7 @@ class Map:
         Returns all locations where the robot could be based on the
         probabilities in the map.
         """
-        points = np.where(self.map > .8)
+        points = np.where(self.map > INIT_THRESHOLD)
         return zip(points[0] * self.parameters['resolution'], 
                    points[1] * self.parameters['resolution'])
 
@@ -122,7 +123,7 @@ class Map:
         resolution = self.parameters['resolution']
         for ray in rays:
             distance = 0
-            for coord in ray[0]:
+            for coord in ray:
                 if coord[0] < 800 and coord[1] < 800:
                     map_value = self.map[coord[0]][coord[1]]
                     if map_value > 0:
@@ -162,23 +163,29 @@ class Map:
         distance_steps = np.arange(5, MAX_DISTANCE_CM/resolution);
         angles = np.arange(1, 180, LIDAR_ANGLE_INTERVAL) + theta
 
-        cosvfunc = np.vectorize(lambda deg: math.cos(math.radians(deg)))
+        def calc_cos(deg):
+            return math.cos(math.radians(deg))
+
+        def calc_sin(deg):
+            return math.sin(math.radians(deg))
+
+        cosvfunc = np.vectorize(calc_cos)
         cos_angles = cosvfunc(angles)
 
-        sinvfunc = np.vectorize(lambda deg: math.sin(math.radians(deg)))
+        sinvfunc = np.vectorize(calc_sin)
         sin_angles = sinvfunc(angles)
 
         x_coords = np.outer(cos_angles, distance_steps) + x / resolution
         y_coords = np.outer(sin_angles, distance_steps) + y / resolution
 
-        floorvfunc = np.vectorize(lambda x: math.floor(x))
+        floorvfunc = np.vectorize(math.floor)
         x_coords = floorvfunc(x_coords)
         y_coords = floorvfunc(y_coords)
         
         # creates a data structure that's easy for self.ray_trace to use
         rays = []
-        for (i, angle) in zip(range(len(x_coords)), angles):
-            rays.append((zip(x_coords[i, 0:], y_coords[i, 0:]), angle))
+        for i in range(len(x_coords)):
+            rays.append(zip(x_coords[i, 0:], y_coords[i, 0:]))
 
         distances = self.ray_trace(x, y, rays)
         return (x_coords, y_coords, distances)

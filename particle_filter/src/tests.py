@@ -36,7 +36,6 @@ class TestMapFunctions(unittest.TestCase):
         plt.axis([0,800,0,800])
         for ray in points:
             plt.plot([p[0] for p in ray], [p[1] for p in ray], markersize=100)
-            pdb.set_trace()
         plt.show()
 
 class TestSensorModel(unittest.TestCase):
@@ -57,6 +56,8 @@ class TestParticleFilter(unittest.TestCase):
         self.pf = ParticleFilter()
 
     def testInitialization(self):
+        #import cProfile
+        #cProfile.runctx('self.pf.run()', None, {'self': self})
         self.pf.run()
 
 if __name__ == '__main__':

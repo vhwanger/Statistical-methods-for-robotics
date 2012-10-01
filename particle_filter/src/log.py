@@ -25,6 +25,14 @@ class Odometry:
         """
         self.x, self.y, self.theta, self.ts = map(float, line.split()[1:])
 
+    def has_changed(self):
+        prev = self.prev_odometry
+        if any([self.x != prev.x, self.y != prev.y, self.theta !=
+                prev.theta]):
+            return True
+        else:
+            return False
+        
 
 class Laser:
     """

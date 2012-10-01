@@ -16,12 +16,15 @@ class ParticleFilter:
         Initializes the map and whatever log file. Then initializes
         PARTICLE_COUNT number of particles. 
         """
+        # initialize the drawing figure
         plt.ion()
         self.figure = plt.figure()
         plt.imshow(plt.imread('map.png'))
         plt.axis([0,800,0,800])
         self.ax = self.figure.add_subplot(111)
-        self.line, = plt.plot([], [])
+        self.line, = plt.plot([], [], 'g.', markersize=10)
+
+        # get data
         self.wean_map = Map('../data/map/wean.dat')
         log_file = Log('../data/log/robotdata1.log')
         self.log_entries = log_file.iterator()
@@ -37,27 +40,25 @@ class ParticleFilter:
         """
         Takes all particles in the filter and normalizes them.
         """
-        total = 0
-        for p in self.particles:
-            total += p.weight
-        
-        for p in self.particles:
-            p.weight /= total
+        def assign_weight(particle, value):
+            particle.weight /= value
+
+        total = sum([p.weight for p in self.particles]) 
+        [assign_weight(p, total) for p in self.particles]
 
         return
 
     def draw(self):
         resolution = self.wean_map.parameters['resolution']
-        self.ax.clear()
-        plt.axis([0,800,0,800])
-        plt.imshow(plt.imread('map.png'))
-        line, = plt.plot([p.x / resolution for p in self.particles],
-                         [p.y / resolution for p in self.particles],
-                         'g.',
-                         markersize=10)
-        #self.line.set_xdata([p.x / resolution for p in self.particles])
-        #self.line.set_ydata([p.y / resolution for p in self.particles])
-        plt.pause(.01)
+        self.line.set_xdata([p.x / resolution for p in self.particles])
+        self.line.set_ydata([p.y / resolution for p in self.particles])
+        plt.pause(.001)
+
+    def compute_variance(self):
+        return np.var([p.weight for p in self.particles])
+
+    def resample(self):
+        pass
 
     def run(self):
         """
@@ -68,9 +69,13 @@ class ParticleFilter:
         for log_entry in self.log_entries:
             if isinstance(log_entry, Laser):
                 [p.compute_weight(log_entry) for p in self.particles]
+                self.normalize_particle_weights()
+                print self.compute_variance()
             elif isinstance(log_entry, Odometry):
                 [p.move_by(log_entry) for p in self.particles]
-            self.draw()
+                if log_entry.prev_odometry is not None and log_entry.has_changed():
+                    self.draw()
+        return
 
 
 class Particle:
@@ -93,21 +98,18 @@ class Particle:
         if prev is None:
             return
 
-        if any([odometry.x != prev.x, odometry.y != prev.y, odometry.theta !=
-                prev.theta]):
+        if odometry.has_changed():
             #print "Previous pose: %s %s %s" % (prev.x, prev.y, prev.theta)
             #print "Noiseless pose: %s %s %s" % (odometry.x, odometry.y, odometry.theta)
-            print "Previous pose: %s %s %s" % (self.x, self.y, self.theta)
+            #print "Previous pose: %s %s %s" % (self.x, self.y, self.theta)
             rot1_hat, trans_hat, rot2_hat = MotionModel.sample_control(odometry)
             self.x = (self.x + 
-                      trans_hat * np.cos(prev.theta + rot1_hat))
+                      trans_hat * np.cos(self.theta + rot1_hat))
             self.y = (self.y + 
-                      trans_hat * np.sin(prev.theta + rot1_hat))
+                      trans_hat * np.sin(self.theta + rot1_hat))
             self.theta = self.theta + rot1_hat + rot2_hat
             
-            print "Noisy pose: %s %s %s" % (self.x, self.y, self.theta)
-        else:
-            print "no change in pose"
+            #print "Noisy pose: %s %s %s" % (self.x, self.y, self.theta)
         return
 
     def compute_weight(self, laser_entry):
