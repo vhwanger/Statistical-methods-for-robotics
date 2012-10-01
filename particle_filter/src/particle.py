@@ -1,4 +1,5 @@
 import random
+import time
 import bisect
 import pdb
 import matplotlib.pyplot as plt
@@ -36,6 +37,7 @@ class ParticleFilter:
         # initialize the drawing figure
         plt.ion()
         self.figure = plt.figure()
+        plt.draw()
         plt.imshow(plt.imread('map.png'))
         plt.axis([0,800,0,800])
         self.ax = self.figure.add_subplot(111)
@@ -70,9 +72,11 @@ class ParticleFilter:
 
     def draw(self):
         resolution = self.wean_map.parameters['resolution']
+        plt.axis([0,800,0,800])
         self.line.set_xdata([p.x / resolution for p in self.particles])
         self.line.set_ydata([p.y / resolution for p in self.particles])
-        plt.pause(.001)
+        plt.draw()
+        time.sleep(.001)
 
     def compute_variance(self):
         return np.var([p.weight for p in self.particles])
