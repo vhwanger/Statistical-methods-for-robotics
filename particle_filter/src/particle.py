@@ -1,5 +1,6 @@
 import random
 import pdb
+import matplotlib.pyplot as plt
 import numpy as np
 import math
 from constants import PARTICLE_COUNT
@@ -15,6 +16,9 @@ class ParticleFilter:
         Initializes the map and whatever log file. Then initializes
         PARTICLE_COUNT number of particles. 
         """
+        plt.ion()
+        self.figure = plt.figure()
+        self.ax = self.figure.add_subplot(111)
         self.wean_map = Map('../data/map/wean.dat')
         log_file = Log('../data/log/robotdata1.log')
         self.log_entries = log_file.iterator()
@@ -39,6 +43,17 @@ class ParticleFilter:
 
         return
 
+    def draw(self):
+        resolution = self.wean_map.parameters['resolution']
+        self.ax.clear()
+        plt.axis([0,800,0,800])
+        plt.imshow(plt.imread('map.png'))
+        line, = plt.plot([p.x / resolution for p in self.particles],
+                         [p.y / resolution for p in self.particles],
+                         'g.',
+                         markersize=10)
+        plt.pause(.1)
+
     def run(self):
         """
         Iterates through all the log entries. If the log entry is a Laser object,
@@ -50,6 +65,7 @@ class ParticleFilter:
                 [p.compute_weight(log_entry) for p in self.particles]
             elif isinstance(log_entry, Odometry):
                 [p.move_by(log_entry) for p in self.particles]
+            self.draw()
 
 
 class Particle:
@@ -74,14 +90,15 @@ class Particle:
 
         if any([odometry.x != prev.x, odometry.y != prev.y, odometry.theta !=
                 prev.theta]):
-            print "Previous pose: %s %s %s" % (prev.x, prev.y, prev.theta)
-            print "Noiseless pose: %s %s %s" % (odometry.x, odometry.y, odometry.theta)
+            #print "Previous pose: %s %s %s" % (prev.x, prev.y, prev.theta)
+            #print "Noiseless pose: %s %s %s" % (odometry.x, odometry.y, odometry.theta)
+            print "Previous pose: %s %s %s" % (self.x, self.y, self.theta)
             rot1_hat, trans_hat, rot2_hat = MotionModel.sample_control(odometry)
-            self.x = (prev.x + 
+            self.x = (self.x + 
                       trans_hat * np.cos(prev.theta + rot1_hat))
-            self.y = (prev.y + 
+            self.y = (self.y + 
                       trans_hat * np.sin(prev.theta + rot1_hat))
-            self.theta = prev.theta + rot1_hat + rot2_hat
+            self.theta = self.theta + rot1_hat + rot2_hat
             
             print "Noisy pose: %s %s %s" % (self.x, self.y, self.theta)
         else:

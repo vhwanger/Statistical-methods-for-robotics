@@ -33,9 +33,10 @@ class TestMapFunctions(unittest.TestCase):
 
         plt.imshow(plt.imread('map.png'))
 
-        for ray in points:
-            plt.plot([p[0] for p in ray], [p[1] for p in ray])
         plt.axis([0,800,0,800])
+        for ray in points:
+            plt.plot([p[0] for p in ray], [p[1] for p in ray], markersize=100)
+            pdb.set_trace()
         plt.show()
 
 class TestSensorModel(unittest.TestCase):
