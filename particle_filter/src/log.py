@@ -76,27 +76,14 @@ class Log:
 
     def iterator(self):
         """
-        This iterator returns all the log data from a particular field.  For
-        odometry data, it adds the distance the robot has moved to the odometry
-        object. The log data normally comes out as coordinates, but we actually
-        care about the delta between two sets of odometry data.
-
-        If it's laser data, it just spits it out as-is.
+        Just a normal iterator for the log data, with a twist for Odometry data.
+        It also appends the previous odometry reading to the object so the
+        motion model can do its thing.
         """
         for data in self.data:
-            if isinstance(data, Odometry) and self.prev_odometry is None:
-                delta = {'delta_x': 0, 
-                         'delta_y': 0, 
-                         'delta_theta': 0}
-                data.delta = delta
+            if isinstance(data, Odometry):
+                data.prev_odometry = self.prev_odometry
                 self.prev_odometry = data
-            elif isinstance(data, Odometry) and self.prev_odometry:
-                delta = {'delta_x': data.x - self.prev_odometry.x,
-                         'delta_y': data.y - self.prev_odometry.y,
-                         'delta_theta': data.theta - self.prev_odometry.theta}
-                data.delta = delta
-                self.prev_odometry = data
-
             yield data
 
 

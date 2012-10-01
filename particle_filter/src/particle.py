@@ -9,6 +9,10 @@ DEBUG = True
 
 class ParticleFilter:
     def __init__(self):
+        """
+        Initializes the map and whatever log file. Then initializes
+        PARTICLE_COUNT number of particles. 
+        """
         self.wean_map = Map('../data/map/wean.dat')
         log_file = Log('../data/log/robotdata1.log')
         self.log_entries = log_file.iterator()
@@ -61,16 +65,12 @@ class Particle:
         """
         This takes in the change in odometry information calculated from the Log
         iterator function.
-
-        I'm also going to make the assumption that if the delta movements from
-        the log file are all 0, then the robot didn't actually move. That may
-        not be true due to some unknown errors somewhere, but it speeds up
-        processing.
         """
-        if not any(odometry.delta.values()):
-            return
-
-        print "Moving particle %s" % odometry.delta
+        print "Moving particle"
+        prev = odometry.prev_odometry
+        if prev:
+            print "Prev was %s, %s, %s" % (prev.x, prev.y, prev.theta)
+        print "now it is %s, %s, %s" % (odometry.x, odometry.y, odometry.theta)
         return
 
     def compute_weight(self, laser_entry):

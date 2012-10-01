@@ -5,7 +5,23 @@ import numpy as np
 from constants import (MAX_DISTANCE_CM, ZMAX, ZHIT, ZNOISE, ZSHORT, HIT_SIGMA,
                        SHORT_NOISE_LAMBDA)
 
+ALPHA_1 = 1
+ALPHA_2 = 1
+ALPHA_3 = 1
+ALPHA_4 = 1
 class MotionModel:
+    """
+    This model comes from the Probabilistic Robotics text in Chapter 5
+    """
+    @classmethod
+    def sample_control(self, odometry):
+        prev = odometry.prev_odometry
+        rot1 = np.arctan2(odometry.y - prev.y,
+                          odometry.x - prev.x) - odometry.theta
+        trans = np.sqrt((odometry.x - prev.x)**2 + (odometry.y - prev.y)**2)
+        rot2 = prev.theta - odometry.theta - rot1
+
+        #rot1_hat = rot1 - 
     pass
 
 class SensorModel:

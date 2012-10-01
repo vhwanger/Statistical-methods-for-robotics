@@ -125,15 +125,15 @@ class Map:
         ray_distances = []
         resolution = self.parameters['resolution']
         for ray in rays:
+            distance = 0
             for coord in ray[0]:
-                distance = 0
                 if coord[0] < 800 and coord[1] < 800:
                     map_value = self.map[coord[0]][coord[1]]
-                    if map_value >0:
+                    if map_value > 0:
                         distance = math.sqrt((coord[0]- x/resolution)**2 + 
                                              (coord[1] - y/resolution)**2)
-                else:
-                    break
+                    else:
+                        break
             ray_distances.append(distance)
         return ray_distances
 

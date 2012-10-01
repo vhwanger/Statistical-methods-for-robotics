@@ -18,7 +18,8 @@ class TestMapFunctions(unittest.TestCase):
         """
         x = 3000
         y = 4150
-        (xs, ys, distances) = self.wean_map.expected_distance(x, y, 30)
+        theta = 30
+        (xs, ys, distances) = self.wean_map.expected_distance(x, y, theta)
 
         points = []
         for (i, distance) in zip(range(len(xs)), distances):
