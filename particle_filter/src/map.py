@@ -93,10 +93,16 @@ class Map:
 
     def is_free(self, coord):
         resolution = self.parameters['resolution']
-        if self.map[coord[0] / resolution][coord[1] / resolution] < .95:
-            return False
-        else:
-            return True
+        try:
+            if coord[0] > 8000 or coord[1] > 8000:
+                return False
+            if self.map[coord[0] / resolution][coord[1] / resolution] < INIT_THRESHOLD:
+                return False
+            else:
+                return True
+        except IndexError:
+            raise Exception("IndexError %s %s" % (coord[0] / resolution,
+                                                  coord[1] / resolution))
 
     def open_cells(self):
         """
@@ -130,14 +136,20 @@ class Map:
         resolution = self.parameters['resolution']
         for i in range(len(x_coords)):
             distance = 0
-            for coord in zip(x_coords[i, :], y_coords[i, :]):
-                if coord[0] < 800 and coord[1] < 800:
-                    map_value = self.map[coord[0]][coord[1]]
-                    if map_value > 0:
-                        distance = math.sqrt((coord[0]- x/resolution)**2 + 
-                                             (coord[1] - y/resolution)**2)
-                    else:
-                        break
+            ray_range = np.bitwise_and(x_coords[i]<799,y_coords[i]<799)
+            len_ray = len(ray_range[ray_range==True])
+            ray_coords = np.c_[x_coords[i,0:len_ray], y_coords[i,0:len_ray]]
+            for j in range(len(ray_coords)):
+                x_i = ray_coords.item(j,0)
+                y_i = ray_coords.item(j,1)
+                try:
+                    map_value = self.map[x_i][y_i]
+                except IndexError:
+                    raise Exception("index error %s %s" % (x_i, y_i))
+                if map_value > 0:
+                    distance = j * resolution
+                else:
+                    break
             ray_distances.append(distance)
         return ray_distances
 
@@ -166,6 +178,9 @@ class Map:
         then we do a lookup against the table to determine when a particular ray
         hits a wall (self.ray_trace).
         """
+        distances = None
+        x_coords = None
+        y_coords = None
         resolution = self.parameters['resolution']
         distance_steps = np.arange(5, MAX_DISTANCE_CM/resolution);
         angles = np.arange(1, 180, LIDAR_ANGLE_INTERVAL) + theta
@@ -176,6 +191,9 @@ class Map:
         def calc_sin(deg):
             return math.sin(math.radians(deg))
 
+        def floor(x):
+            return math.floor(x)
+
         cosvfunc = np.vectorize(calc_cos)
         cos_angles = cosvfunc(angles)
 
@@ -184,16 +202,9 @@ class Map:
 
         x_coords = np.outer(cos_angles, distance_steps) + x / resolution
         y_coords = np.outer(sin_angles, distance_steps) + y / resolution
-
-        floorvfunc = np.vectorize(math.floor)
-        x_coords = floorvfunc(x_coords)
-        y_coords = floorvfunc(y_coords)
+        x_coords = x_coords.astype(int)
+        y_coords = y_coords.astype(int)
         
-        # creates a data structure that's easy for self.ray_trace to use
-        #rays = []
-        #for i in range(len(x_coords)):
-        #    rays.append(zip(x_coords[i, 0:], y_coords[i, 0:]))
-
         distances = self.ray_trace(x, y, x_coords, y_coords)
         return (x_coords, y_coords, distances)
 

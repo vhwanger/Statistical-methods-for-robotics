@@ -39,7 +39,7 @@ class ParticleFilter:
         plt.imshow(plt.imread('map.png'))
         plt.axis([0,800,0,800])
         self.ax = self.figure.add_subplot(111)
-        self.line, = plt.plot([], [], 'g.', markersize=10)
+        self.line, = plt.plot([], [], 'g.', markersize=3)
 
         # get data
         self.wean_map = Map('../data/map/wean.dat')
@@ -78,8 +78,9 @@ class ParticleFilter:
         return np.var([p.weight for p in self.particles])
 
     def resample(self):
+        print "resampling"
+        print self.compute_variance()
         if self.compute_variance() > VARIANCE_THRESHOLD:
-            print "resampling"
             dist = WeightedDistribution(self.particles)
 
             new_particles = []
@@ -99,7 +100,8 @@ class ParticleFilter:
         it updates the weights of all the particles. If it's an Odometry object,
         it moves the particles.
         """
-        for log_entry in self.log_entries:
+        for (i, log_entry) in enumerate(self.log_entries):
+            print i
             if isinstance(log_entry, Laser):
                 [p.compute_weight(log_entry) for p in self.particles]
                 self.normalize_particle_weights()
@@ -159,8 +161,10 @@ class Particle:
                                                                  self.theta)
         
         self.weight = 1
-        for (exp_dist, act_dist) in zip(expected_distances, laser_entry.distances):
-            self.weight *= SensorModel.sample_observation(float(str(act_dist)), exp_dist)
+        #for (exp_dist, act_dist) in zip(expected_distances, laser_entry.distances):
+        #    self.weight *= SensorModel.sample_observation(float(str(act_dist)), exp_dist)
+        # TAKE OUT
+        self.weight = .9
 
         return
 
