@@ -2,6 +2,7 @@
 Module contains probability density functions for both sensor and odometry.
 """
 import numpy as np
+import pdb
 from constants import (MAX_DISTANCE_CM, ZMAX, ZHIT, ZNOISE, ZSHORT, HIT_SIGMA,
                        SHORT_NOISE_LAMBDA)
 
@@ -15,14 +16,31 @@ class MotionModel:
     """
     @classmethod
     def sample_control(self, odometry):
+        pdb.set_trace()
+        rot1_hat = 0
+        trans_hat = 0
+        rot2_hat = 0
         prev = odometry.prev_odometry
         rot1 = np.arctan2(odometry.y - prev.y,
                           odometry.x - prev.x) - odometry.theta
         trans = np.sqrt((odometry.x - prev.x)**2 + (odometry.y - prev.y)**2)
         rot2 = prev.theta - odometry.theta - rot1
 
-        #rot1_hat = rot1 - 
-    pass
+        rot1_hat_variance = ALPHA_1 * rot1 + ALPHA_2 * rot2
+        trans_hat_variance = ALPHA_3 * trans + ALPHA_4 * (rot1 + rot2)
+        rot2_hat_variance = ALPHA_1 * rot2 + ALPHA_2 * trans
+
+        if abs(rot1_hat_variance) > 0:
+            rot1_hat = rot1 - np.random.normal(0, rot1_hat_variance)
+
+        if abs(trans_hat_variance) > 0:
+            trans_hat = trans - np.random.normal(0, trans_hat_variance)
+
+        if abs(rot2_hat_variance) > 0:
+            rot2_hat = rot2 - np.random.normal(0, rot2_hat_variance)
+
+        return (rot1_hat, trans_hat, rot2_hat)
+
 
 class SensorModel:
     """

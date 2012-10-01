@@ -71,9 +71,6 @@ class Map:
         except IndexError:
             raise ParameterException("Couldn't find the global_map[0] parameter")
 
-
-        
-
     def read_map_points(self, lines):
         """
         Reads in the probabilities from the map and stores it in a two
@@ -84,7 +81,7 @@ class Map:
             if line.strip():
                 if re.compile('[a-zA-Z]').findall(line):
                     continue
-                points = np.array(map(D, line.split()))
+                points = np.array(map(float, line.split()))
                 if len(points) != self.num_columns:
                     print line
                     raise MapDataException("Line has incorrect number of data "
@@ -93,7 +90,6 @@ class Map:
                 self.map[row_counter] = points
                 row_counter += 1
 
-    
     def open_cells(self):
         """
         Returns all locations where the robot could be based on the
@@ -136,7 +132,6 @@ class Map:
                         break
             ray_distances.append(distance)
         return ray_distances
-
 
     def expected_distance(self, x, y, theta):
         """

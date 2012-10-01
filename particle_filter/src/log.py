@@ -23,7 +23,7 @@ class Odometry:
 
         O -94.234001 -139.953995 -1.342158 0.025863
         """
-        self.x, self.y, self.theta, self.ts = map(D, line.split()[1:])
+        self.x, self.y, self.theta, self.ts = map(float, line.split()[1:])
 
 
 class Laser:
@@ -43,7 +43,7 @@ class Laser:
         L -94.234001 -139.953995 -1.342158 -88.567719 -164.303391 -1.342158 66
         66 66 ....
         """
-        data = map(D, line.split()[1:])
+        data = map(float, line.split()[1:])
         self.distances = data[6:-1]
 
         # let's remove the angle readings we don't care about

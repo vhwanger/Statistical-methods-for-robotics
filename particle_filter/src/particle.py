@@ -1,7 +1,9 @@
 import random
 import pdb
+import numpy as np
+import math
 from constants import PARTICLE_COUNT
-from models import SensorModel
+from models import SensorModel, MotionModel
 from map import Map
 from log import Log, Laser, Odometry
 
@@ -53,7 +55,7 @@ class ParticleFilter:
 class Particle:
     def __init__(self, x, y, map, theta=None):
         self.x, self.y = (x, y)
-        self.theta = random.randint(1, 360)
+        self.theta = math.radians(random.randint(1, 360))
         self.map = map
         self.weight = 1
 
@@ -66,11 +68,24 @@ class Particle:
         This takes in the change in odometry information calculated from the Log
         iterator function.
         """
-        print "Moving particle"
         prev = odometry.prev_odometry
-        if prev:
-            print "Prev was %s, %s, %s" % (prev.x, prev.y, prev.theta)
-        print "now it is %s, %s, %s" % (odometry.x, odometry.y, odometry.theta)
+        if prev is None:
+            return
+
+        if any([odometry.x != prev.x, odometry.y != prev.y, odometry.theta !=
+                prev.theta]):
+            print "Old pose: %s %s %s" % (self.x, self.y, self.theta)
+            rot1_hat, trans_hat, rot2_hat = MotionModel.sample_control(odometry)
+            self.x = (self.x + 
+                      trans_hat * np.cos(self.theta + rot1_hat))
+            self.y = (self.y + 
+                      trans_hat * np.sin(self.theta + rot1_hat))
+            self.theta = self.theta + rot1_hat + rot2_hat
+            
+            print "New pose: %s %s %s" % (self.x, self.y, self.theta)
+            pdb.set_trace()
+        else:
+            print "no change in pose"
         return
 
     def compute_weight(self, laser_entry):
