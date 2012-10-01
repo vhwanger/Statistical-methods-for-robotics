@@ -1,14 +1,31 @@
 import random
+import bisect
 import pdb
 import matplotlib.pyplot as plt
 import numpy as np
 import math
-from constants import PARTICLE_COUNT
+from constants import PARTICLE_COUNT, VARIANCE_THRESHOLD
 from models import SensorModel, MotionModel
 from map import Map
 from log import Log, Laser, Odometry
 
 DEBUG = True
+
+class WeightedDistribution:
+    def __init__(self, particles):
+        accum = 0.0
+        self.particles = [p for p in particles if p.weight > 0]
+        self.distribution = []
+        for x in self.particles:
+            accum += x.weight
+            self.distribution.append(accum)
+
+    def pick(self):
+        try:
+            return self.particles[bisect.bisect_left(self.distribution, random.uniform(0, 1))]
+        except IndexError:
+            # Happens when all particles are improbable w=0
+            return None
 
 class ParticleFilter:
     def __init__(self):
@@ -30,11 +47,14 @@ class ParticleFilter:
         self.log_entries = log_file.iterator()
 
         # initialize uniform random particles across all open cells
-        open_cells = self.wean_map.open_cells()
+        self.open_cells = self.wean_map.open_cells()
         self.particles = []
         for i in range(PARTICLE_COUNT):
-            idx = random.randint(0, len(open_cells))
-            self.particles.append(Particle(*open_cells[idx], map=self.wean_map))
+            self.particles.append(self.create_random())
+
+    def create_random(self):
+        idx = random.randint(0, len(self.open_cells))
+        return Particle(*self.open_cells[idx], map=self.wean_map)
 
     def normalize_particle_weights(self):
         """
@@ -58,7 +78,20 @@ class ParticleFilter:
         return np.var([p.weight for p in self.particles])
 
     def resample(self):
-        pass
+        if self.compute_variance() > VARIANCE_THRESHOLD:
+            print "resampling"
+            dist = WeightedDistribution(self.particles)
+
+            new_particles = []
+            for _ in self.particles:
+                p = dist.pick()
+                if p is None:
+                    new_particle = self.create_random()
+                else:
+                    new_particle = Particle(p.x, p.y, self.wean_map)
+                new_particles.append(new_particle)
+            self.particles = new_particles
+        return
 
     def run(self):
         """
@@ -70,7 +103,7 @@ class ParticleFilter:
             if isinstance(log_entry, Laser):
                 [p.compute_weight(log_entry) for p in self.particles]
                 self.normalize_particle_weights()
-                print self.compute_variance()
+                self.resample()
             elif isinstance(log_entry, Odometry):
                 [p.move_by(log_entry) for p in self.particles]
                 if log_entry.prev_odometry is not None and log_entry.has_changed():
@@ -118,6 +151,10 @@ class Particle:
         the log entry.
         """
         # we don't need the first two returned objects from this.
+        if not self.map.is_free((self.x, self.y)):
+            self.weight = 0
+            return
+
         (_, __, expected_distances) = self.map.expected_distance(self.x, self.y,
                                                                  self.theta)
         

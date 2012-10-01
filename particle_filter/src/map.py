@@ -91,6 +91,13 @@ class Map:
                 self.map[row_counter] = points
                 row_counter += 1
 
+    def is_free(self, coord):
+        resolution = self.parameters['resolution']
+        if self.map[coord[0] / resolution][coord[1] / resolution] < .95:
+            return False
+        else:
+            return True
+
     def open_cells(self):
         """
         Returns all locations where the robot could be based on the
@@ -100,7 +107,7 @@ class Map:
         return zip(points[0] * self.parameters['resolution'], 
                    points[1] * self.parameters['resolution'])
 
-    def ray_trace(self, x, y, rays):
+    def ray_trace(self, x, y, x_coords, y_coords):
         """
         This takes in the location of the robot and a list of rays. The rays
         variable is organized as follows:
@@ -121,9 +128,9 @@ class Map:
         """
         ray_distances = []
         resolution = self.parameters['resolution']
-        for ray in rays:
+        for i in range(len(x_coords)):
             distance = 0
-            for coord in ray:
+            for coord in zip(x_coords[i, :], y_coords[i, :]):
                 if coord[0] < 800 and coord[1] < 800:
                     map_value = self.map[coord[0]][coord[1]]
                     if map_value > 0:
@@ -183,11 +190,11 @@ class Map:
         y_coords = floorvfunc(y_coords)
         
         # creates a data structure that's easy for self.ray_trace to use
-        rays = []
-        for i in range(len(x_coords)):
-            rays.append(zip(x_coords[i, 0:], y_coords[i, 0:]))
+        #rays = []
+        #for i in range(len(x_coords)):
+        #    rays.append(zip(x_coords[i, 0:], y_coords[i, 0:]))
 
-        distances = self.ray_trace(x, y, rays)
+        distances = self.ray_trace(x, y, x_coords, y_coords)
         return (x_coords, y_coords, distances)
 
 

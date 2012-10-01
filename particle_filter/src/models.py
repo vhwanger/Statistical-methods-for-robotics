@@ -10,6 +10,8 @@ ALPHA_1 = .001
 ALPHA_2 = .001
 ALPHA_3 = .0001
 ALPHA_4 = .0001
+
+RANDOM_NOISE = 1. / MAX_DISTANCE_CM
 class MotionModel:
     """
     This model comes from the Probabilistic Robotics text in Chapter 5
@@ -69,8 +71,7 @@ class SensorModel:
         """
         Uniform noise across the entire range of readings
         """
-        y = 1. / MAX_DISTANCE_CM
-        return y
+        return RANDOM_NOISE
 
     @classmethod
     def short_noise(self, meas_dist, expected_distance):
