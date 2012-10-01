@@ -74,16 +74,16 @@ class Particle:
 
         if any([odometry.x != prev.x, odometry.y != prev.y, odometry.theta !=
                 prev.theta]):
-            print "Old pose: %s %s %s" % (self.x, self.y, self.theta)
+            print "Previous pose: %s %s %s" % (prev.x, prev.y, prev.theta)
+            print "Noiseless pose: %s %s %s" % (odometry.x, odometry.y, odometry.theta)
             rot1_hat, trans_hat, rot2_hat = MotionModel.sample_control(odometry)
-            self.x = (self.x + 
-                      trans_hat * np.cos(self.theta + rot1_hat))
-            self.y = (self.y + 
-                      trans_hat * np.sin(self.theta + rot1_hat))
-            self.theta = self.theta + rot1_hat + rot2_hat
+            self.x = (prev.x + 
+                      trans_hat * np.cos(prev.theta + rot1_hat))
+            self.y = (prev.y + 
+                      trans_hat * np.sin(prev.theta + rot1_hat))
+            self.theta = prev.theta + rot1_hat + rot2_hat
             
-            print "New pose: %s %s %s" % (self.x, self.y, self.theta)
-            pdb.set_trace()
+            print "Noisy pose: %s %s %s" % (self.x, self.y, self.theta)
         else:
             print "no change in pose"
         return

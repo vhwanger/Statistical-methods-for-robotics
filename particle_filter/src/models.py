@@ -6,17 +6,16 @@ import pdb
 from constants import (MAX_DISTANCE_CM, ZMAX, ZHIT, ZNOISE, ZSHORT, HIT_SIGMA,
                        SHORT_NOISE_LAMBDA)
 
-ALPHA_1 = 1
-ALPHA_2 = 1
-ALPHA_3 = 1
-ALPHA_4 = 1
+ALPHA_1 = .001
+ALPHA_2 = .001
+ALPHA_3 = .0001
+ALPHA_4 = .0001
 class MotionModel:
     """
     This model comes from the Probabilistic Robotics text in Chapter 5
     """
     @classmethod
     def sample_control(self, odometry):
-        pdb.set_trace()
         rot1_hat = 0
         trans_hat = 0
         rot2_hat = 0
@@ -31,13 +30,13 @@ class MotionModel:
         rot2_hat_variance = ALPHA_1 * rot2 + ALPHA_2 * trans
 
         if abs(rot1_hat_variance) > 0:
-            rot1_hat = rot1 - np.random.normal(0, rot1_hat_variance)
+            rot1_hat = rot1 - np.random.normal(0, abs(rot1_hat_variance))
 
         if abs(trans_hat_variance) > 0:
-            trans_hat = trans - np.random.normal(0, trans_hat_variance)
+            trans_hat = trans - np.random.normal(0, abs(trans_hat_variance))
 
         if abs(rot2_hat_variance) > 0:
-            rot2_hat = rot2 - np.random.normal(0, rot2_hat_variance)
+            rot2_hat = rot2 - np.random.normal(0, abs(rot2_hat_variance))
 
         return (rot1_hat, trans_hat, rot2_hat)
 
