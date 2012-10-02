@@ -39,19 +39,22 @@ def compute_weight_p(particle, laser_entry):
     Takes in a laser log entry and calculates how well the particle matches
     the log entry.
     """
-    if not particle.map.is_free((particle.x, particle.y)) or particle.weight == 0:
-        particle.weight = 0
-        return
+    try:
+        if not particle.map.is_free((particle.x, particle.y)) or particle.weight == 0:
+            particle.weight = 0
+            return
 
-    # we don't need the first two returned objects from this.
-    (_, __, expected_distances) = particle.map.expected_distance(particle.x, particle.y,
-                                                             particle.theta)
+        # we don't need the first two returned objects from this.
+        (_, __, expected_distances) = particle.map.expected_distance(particle.x, particle.y,
+                                                                 particle.theta)
+        
+        particle.weight = 1
+        for (exp_dist, act_dist) in zip(expected_distances, laser_entry.distances):
+            particle.weight *= (SensorModel.sample_observation(float(str(act_dist)),
+                                                               exp_dist))**(1/9)
+    except KeyboardInterrupt:
+        sys.exit(1)
     
-    particle.weight = 1
-    for (exp_dist, act_dist) in zip(expected_distances, laser_entry.distances):
-        particle.weight *= (SensorModel.sample_observation(float(str(act_dist)),
-                                                           exp_dist))**(1/9)
-
     return
 import multiprocessing
 import itertools
