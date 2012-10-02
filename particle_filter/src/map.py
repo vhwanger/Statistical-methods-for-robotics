@@ -113,7 +113,7 @@ class Map:
         return zip(points[0] * self.parameters['resolution'], 
                    points[1] * self.parameters['resolution'])
 
-    def ray_trace(self, x, y, x_coords, y_coords):
+    def ray_trace(self, x, y, all_coords):
         """
         This takes in the location of the robot and a list of rays. The rays
         variable is organized as follows:
@@ -134,21 +134,37 @@ class Map:
         """
         ray_distances = []
         resolution = self.parameters['resolution']
-        for i in range(len(x_coords)):
+        for i in range(all_coords.shape[0]):
             distance = 0
-            ray_range = np.bitwise_and(x_coords[i]<799,y_coords[i]<799)
-            len_ray = len(ray_range[ray_range==True])
-            ray_coords = np.c_[x_coords[i,0:len_ray], y_coords[i,0:len_ray]]
-            ray_values, = np.where(self.map[tuple(ray_coords.T)] <= 0)
-            if not len(ray_values):
+            
+            # filter x and y coords to stay within map regions
+            #ray_range = np.bitwise_and(x_coords[i]<799,y_coords[i]<799)
+
+            # determine ending index where the ray stops
+            #len_ray = ray_range[ray_range==True].shape[0]
+
+            # zip up the x and y coords
+            #ray_coords = np.c_[x_coords[i,0:len_ray], y_coords[i,0:len_ray]]
+            ray_coords = all_coords[i,(all_coords[i,:,0] < 799) & (all_coords[i,:,1] < 799),:]
+
+            # look up all the coordinates in the map and find where the map is
+            # less than or equal to zero (this is a wall)
+            ray_values, = np.where(self.map[ray_coords[:,0], ray_coords[:,1]] <= 0)
+
+            # some special exceptions
+            if not ray_values.shape[0]:
                 if not len(ray_coords):
-                    end_of_ray = (x/resolution, y/resolution)
+                    end_of_ray = np.array([x/resolution, y/resolution])
                 else:
                     end_of_ray = ray_coords[len(ray_values)]
             else:
-                end_of_ray = ray_coords[ray_values[0]]
-            distance = math.sqrt((end_of_ray[0] - x/resolution)**2 + 
-                                 (end_of_ray[1] - y/resolution)**2)
+                # get the end of the ray
+                end_of_ray = ray_coords[ray_values.item(0)]
+
+            # find the distance from the originating point
+            distance = math.sqrt((end_of_ray.item(0) - x/resolution)**2 + 
+                                 (end_of_ray.item(1) - y/resolution)**2)
+
             ray_distances.append(distance)
         return ray_distances
 
@@ -190,8 +206,6 @@ class Map:
         def calc_sin(deg):
             return math.sin(math.radians(deg))
 
-        def floor(x):
-            return math.floor(x)
 
         cosvfunc = np.vectorize(calc_cos)
         cos_angles = cosvfunc(angles)
@@ -204,7 +218,8 @@ class Map:
         x_coords = x_coords.astype(int)
         y_coords = y_coords.astype(int)
         
-        distances = self.ray_trace(x, y, x_coords, y_coords)
+        all_coords = np.dstack((x_coords, y_coords))
+        distances = self.ray_trace(x, y, all_coords)
         return (x_coords, y_coords, distances)
 
 

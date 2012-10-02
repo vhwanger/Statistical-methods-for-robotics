@@ -7,8 +7,9 @@ import numpy as np
 import math
 from constants import PARTICLE_COUNT, VARIANCE_THRESHOLD
 from models import SensorModel, MotionModel
-import pyximport; pyximport.install()
 import map
+#import pyximport; pyximport.install()
+#import map_c
 from log import Log, Laser, Odometry
 
 DEBUG = True
@@ -99,7 +100,7 @@ class ParticleFilter:
             self.particles = new_particles
         return
 
-    def run(self):
+    def run(self, limit=None):
         """
         Iterates through all the log entries. If the log entry is a Laser object,
         it updates the weights of all the particles. If it's an Odometry object,
@@ -116,6 +117,8 @@ class ParticleFilter:
                 [p.move_by(log_entry) for p in self.particles]
                 if log_entry.prev_odometry is not None and log_entry.has_changed():
                     self.draw()
+            if limit and limit == i:
+                return
         return
 
 
@@ -172,3 +175,9 @@ class Particle:
 
         return
 
+if __name__ == '__main__':
+    pf = ParticleFilter()
+    import cProfile, pstats
+    cProfile.runctx('pf.run(20)', globals(), locals(), 'profile.prof')
+    s = pstats.Stats("profile.prof")
+    s.strip_dirs().sort_stats('time').print_stats()

@@ -56,10 +56,6 @@ class TestParticleFilter(unittest.TestCase):
         self.pf = ParticleFilter()
 
     def testInitialization(self):
-        #import cProfile, pstats
-        #cProfile.runctx('self.pf.run()', None, {'self': self}, 'profile.prof')
-        #s = pstats.Stats("profile.prof")
-        #s.strip_dirs().sort_stats('time').print_stats
         self.pf.run()
 
 if __name__ == '__main__':
