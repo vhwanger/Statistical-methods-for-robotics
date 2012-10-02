@@ -7,13 +7,13 @@ import numpy as np
 import math
 from constants import PARTICLE_COUNT, VARIANCE_THRESHOLD
 from models import SensorModel, MotionModel
-try:
-    import pyximport; pyximport.install()
-    import map_c
-    CYTHON = True
-except:
-    import map_py
-    CYTHON = False
+#try:
+#    import pyximport; pyximport.install()
+#    import map_c
+#    CYTHON = True
+#except:
+import map_py
+CYTHON = False
 from log import Log, Laser, Odometry
 
 DEBUG = True
@@ -33,6 +33,38 @@ class WeightedDistribution:
         except IndexError:
             # Happens when all particles are improbable w=0
             return None
+
+def compute_weight_p(particle, laser_entry):
+    """
+    Takes in a laser log entry and calculates how well the particle matches
+    the log entry.
+    """
+    if not particle.map.is_free((particle.x, particle.y)) or particle.weight == 0:
+        particle.weight = 0
+        return
+
+    # we don't need the first two returned objects from this.
+    (_, __, expected_distances) = particle.map.expected_distance(particle.x, particle.y,
+                                                             particle.theta)
+    
+    particle.weight = 1
+    for (exp_dist, act_dist) in zip(expected_distances, laser_entry.distances):
+        particle.weight *= (SensorModel.sample_observation(float(str(act_dist)),
+                                                           exp_dist))**(1/9)
+
+    return
+import multiprocessing
+import itertools
+
+try:
+    cpus = multiprocessing.cpu_count()
+except NotImplementedError:
+    cpus = 2   # arbitrary default
+
+
+
+def compute_weight_star(a_b):
+    return compute_weight_p(*a_b)
 
 class ParticleFilter:
     def __init__(self):
@@ -72,7 +104,7 @@ class ParticleFilter:
         Takes all particles in the filter and normalizes them.
         """
         def assign_weight(particle, value):
-            particle.weight /= value
+            particle.weight /= float(value)
 
         total = sum([p.weight for p in self.particles]) 
         [assign_weight(p, total) for p in self.particles]
@@ -91,9 +123,9 @@ class ParticleFilter:
         return np.var([p.weight for p in self.particles])
 
     def resample(self):
-        print "resampling"
         print self.compute_variance()
         if self.compute_variance() > VARIANCE_THRESHOLD:
+            print "resampling"
             dist = WeightedDistribution(self.particles)
 
             new_particles = []
@@ -113,12 +145,15 @@ class ParticleFilter:
         it updates the weights of all the particles. If it's an Odometry object,
         it moves the particles.
         """
+        pool = multiprocessing.Pool(processes=cpus)
         for (i, log_entry) in enumerate(self.log_entries):
             print i
             if isinstance(log_entry, Laser):
-                [p.compute_weight(log_entry) for p in self.particles]
+                #[p.compute_weight(log_entry) for p in self.particles]
+                pool.map(compute_weight_star, itertools.izip(self.particles,
+                                                             itertools.repeat(log_entry)))
                 self.normalize_particle_weights()
-                #self.resample()
+                self.resample()
             elif isinstance(log_entry, Odometry):
                 [p.move_by(log_entry) for p in self.particles]
                 #if log_entry.prev_odometry is not None and log_entry.has_changed():
@@ -164,24 +199,28 @@ class Particle:
             #print "Noisy pose: %s %s %s" % (self.x, self.y, self.theta)
         return
 
-    def compute_weight(self, laser_entry):
-        """
-        Takes in a laser log entry and calculates how well the particle matches
-        the log entry.
-        """
-        if not self.map.is_free((self.x, self.y)):
-            self.weight = 0
-            return
+    #def compute_weight(self, laser_entry):
+    #    """
+    #    Takes in a laser log entry and calculates how well the particle matches
+    #    the log entry.
+    #    """
+    #    if not self.map.is_free((self.x, self.y)) or self.weight == 0:
+    #        self.weight = 0
+    #        return
 
-        # we don't need the first two returned objects from this.
-        (_, __, expected_distances) = self.map.expected_distance(self.x, self.y,
-                                                                 self.theta)
-        
-        self.weight = 1
-        for (exp_dist, act_dist) in zip(expected_distances, laser_entry.distances):
-            self.weight *= SensorModel.sample_observation(float(str(act_dist)), exp_dist)
+    #    # we don't need the first two returned objects from this.
+    #    (_, __, expected_distances) = self.map.expected_distance(self.x, self.y,
+    #                                                             self.theta)
+    #    
+    #    self.weight = 1
+    #    for (exp_dist, act_dist) in zip(expected_distances, laser_entry.distances):
+    #        self.weight *= SensorModel.sample_observation(float(str(act_dist)), exp_dist)
 
-        return
+    #    return
+
+
+
+
 
 if __name__ == '__main__':
     pf = ParticleFilter()
