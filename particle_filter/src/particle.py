@@ -7,7 +7,8 @@ import numpy as np
 import math
 from constants import PARTICLE_COUNT, VARIANCE_THRESHOLD
 from models import SensorModel, MotionModel
-from map import Map
+import pyximport; pyximport.install()
+import map
 from log import Log, Laser, Odometry
 
 DEBUG = True
@@ -44,7 +45,7 @@ class ParticleFilter:
         self.line, = plt.plot([], [], 'g.', markersize=3)
 
         # get data
-        self.wean_map = Map('../data/map/wean.dat')
+        self.wean_map = map.Map('../data/map/wean.dat')
         log_file = Log('../data/log/robotdata1.log')
         self.log_entries = log_file.iterator()
 
@@ -107,9 +108,10 @@ class ParticleFilter:
         for (i, log_entry) in enumerate(self.log_entries):
             print i
             if isinstance(log_entry, Laser):
+                print "laser"
                 [p.compute_weight(log_entry) for p in self.particles]
                 self.normalize_particle_weights()
-                self.resample()
+                #self.resample()
             elif isinstance(log_entry, Odometry):
                 [p.move_by(log_entry) for p in self.particles]
                 if log_entry.prev_odometry is not None and log_entry.has_changed():
@@ -156,19 +158,17 @@ class Particle:
         Takes in a laser log entry and calculates how well the particle matches
         the log entry.
         """
-        # we don't need the first two returned objects from this.
         if not self.map.is_free((self.x, self.y)):
             self.weight = 0
             return
 
+        # we don't need the first two returned objects from this.
         (_, __, expected_distances) = self.map.expected_distance(self.x, self.y,
                                                                  self.theta)
         
         self.weight = 1
-        #for (exp_dist, act_dist) in zip(expected_distances, laser_entry.distances):
-        #    self.weight *= SensorModel.sample_observation(float(str(act_dist)), exp_dist)
-        # TAKE OUT
-        self.weight = .9
+        for (exp_dist, act_dist) in zip(expected_distances, laser_entry.distances):
+            self.weight *= SensorModel.sample_observation(float(str(act_dist)), exp_dist)
 
         return
 

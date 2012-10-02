@@ -139,17 +139,16 @@ class Map:
             ray_range = np.bitwise_and(x_coords[i]<799,y_coords[i]<799)
             len_ray = len(ray_range[ray_range==True])
             ray_coords = np.c_[x_coords[i,0:len_ray], y_coords[i,0:len_ray]]
-            for j in range(len(ray_coords)):
-                x_i = ray_coords.item(j,0)
-                y_i = ray_coords.item(j,1)
-                try:
-                    map_value = self.map[x_i][y_i]
-                except IndexError:
-                    raise Exception("index error %s %s" % (x_i, y_i))
-                if map_value > 0:
-                    distance = j * resolution
+            ray_values, = np.where(self.map[tuple(ray_coords.T)] <= 0)
+            if not len(ray_values):
+                if not len(ray_coords):
+                    end_of_ray = (x/resolution, y/resolution)
                 else:
-                    break
+                    end_of_ray = ray_coords[len(ray_values)]
+            else:
+                end_of_ray = ray_coords[ray_values[0]]
+            distance = math.sqrt((end_of_ray[0] - x/resolution)**2 + 
+                                 (end_of_ray[1] - y/resolution)**2)
             ray_distances.append(distance)
         return ray_distances
 
