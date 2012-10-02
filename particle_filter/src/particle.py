@@ -7,9 +7,13 @@ import numpy as np
 import math
 from constants import PARTICLE_COUNT, VARIANCE_THRESHOLD
 from models import SensorModel, MotionModel
-import map
-#import pyximport; pyximport.install()
-#import map_c
+try:
+    import pyximport; pyximport.install()
+    import map_c
+    CYTHON = True
+except:
+    import map_py
+    CYTHON = False
 from log import Log, Laser, Odometry
 
 DEBUG = True
@@ -46,7 +50,10 @@ class ParticleFilter:
         self.line, = plt.plot([], [], 'g.', markersize=3)
 
         # get data
-        self.wean_map = map.Map('../data/map/wean.dat')
+        if CYTHON:
+            self.wean_map = map_c.Map('../data/map/wean.dat')
+        else:
+            self.wean_map = map_py.Map('../data/map/wean.dat')
         log_file = Log('../data/log/robotdata1.log')
         self.log_entries = log_file.iterator()
 
@@ -57,7 +64,7 @@ class ParticleFilter:
             self.particles.append(self.create_random())
 
     def create_random(self):
-        idx = random.randint(0, len(self.open_cells))
+        idx = random.randint(0, len(self.open_cells)-1)
         return Particle(*self.open_cells[idx], map=self.wean_map)
 
     def normalize_particle_weights(self):
@@ -109,14 +116,13 @@ class ParticleFilter:
         for (i, log_entry) in enumerate(self.log_entries):
             print i
             if isinstance(log_entry, Laser):
-                print "laser"
                 [p.compute_weight(log_entry) for p in self.particles]
                 self.normalize_particle_weights()
                 #self.resample()
             elif isinstance(log_entry, Odometry):
                 [p.move_by(log_entry) for p in self.particles]
-                if log_entry.prev_odometry is not None and log_entry.has_changed():
-                    self.draw()
+                #if log_entry.prev_odometry is not None and log_entry.has_changed():
+                self.draw()
             if limit and limit == i:
                 return
         return
@@ -152,6 +158,8 @@ class Particle:
             self.y = (self.y + 
                       trans_hat * np.sin(self.theta + rot1_hat))
             self.theta = self.theta + rot1_hat + rot2_hat
+            if self.x < 0 or self.y < 0:
+                print "WARNING - PARTICLE MOVED OFF MAP"
             
             #print "Noisy pose: %s %s %s" % (self.x, self.y, self.theta)
         return
