@@ -31,10 +31,11 @@ class TestMapFunctions(unittest.TestCase):
                    distance]
             points.append(ray)
 
+        plt.figure()
         plt.imshow(plt.imread('map.png'))
 
         plt.axis([0,800,0,800])
-        for ray in points:
+        for ray in points[-4:-1]:
             plt.plot([p[0] for p in ray], [p[1] for p in ray], markersize=100)
         plt.show()
 
@@ -46,7 +47,7 @@ class TestSensorModel(unittest.TestCase):
         y = []
         x = np.arange(1, MAX_DISTANCE_CM + 1)
         for i in x:
-            y.append(SensorModel.sample_observation(i, 4000))
+            y.append(SensorModel.sample_observation(i, 2000))
         plt.plot(x, y)
         plt.show()
 

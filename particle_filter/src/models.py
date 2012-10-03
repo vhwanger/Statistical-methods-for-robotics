@@ -62,7 +62,7 @@ class SensorModel:
         """
         mu = expected_distance
 
-        norm = 1/(HIT_SIGMA * np.sqrt(2 * np.pi))
+        norm = 1./(HIT_SIGMA * np.sqrt(2 * np.pi))
         v = norm * np.exp(-.5*((meas_dist-mu)/HIT_SIGMA)**2)
         return v
 
@@ -78,9 +78,9 @@ class SensorModel:
         """
         Noise associated with random objects in from of the expected_distance
         """
-        norm = 1/(1-np.exp(-SHORT_NOISE_LAMBDA*expected_distance))
+        norm = 1./(1-np.exp(-SHORT_NOISE_LAMBDA*expected_distance))
         if meas_dist < expected_distance:
-            return (SHORT_NOISE_LAMBDA * np.exp(-1 * SHORT_NOISE_LAMBDA *
+            return (SHORT_NOISE_LAMBDA * np.exp(-1. * SHORT_NOISE_LAMBDA *
                                                 meas_dist) * norm)
         else:
             return 0

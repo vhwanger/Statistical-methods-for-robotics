@@ -22,7 +22,8 @@ class WeightedDistribution:
     def __init__(self, particles):
         accum = 0.0
         self.particles = [p for p in particles if p.weight > 0]
-        print len(self.particles)
+        self.r = random.uniform(0,1) * 1./len(self.particles)
+        self.interval = 1. / len(self.particles)
         self.distribution = []
         for x in self.particles:
             accum += x.weight
@@ -30,7 +31,10 @@ class WeightedDistribution:
 
     def pick(self):
         try:
-            return self.particles[bisect.bisect_left(self.distribution, random.uniform(0, 1))]
+            index = self.particles[bisect.bisect_left(self.distribution, self.r)]
+            self.r += self.interval
+            return index
+
         except IndexError:
             # Happens when all particles are improbable w=0
             return None
@@ -91,7 +95,7 @@ class ParticleFilter:
             self.wean_map = map_c.Map('../data/map/wean.dat')
         else:
             self.wean_map = map_py.Map('../data/map/wean.dat')
-        log_file = Log('../data/log/robotdata2.log')
+        log_file = Log('../data/log/robotdata1.log')
         self.log_entries = log_file.iterator()
 
         # initialize uniform random particles across all open cells
@@ -161,7 +165,8 @@ class ParticleFilter:
                 self.resample()
             elif isinstance(log_entry, Odometry):
                 [p.move_by(log_entry) for p in self.particles]
-                #if log_entry.prev_odometry is not None and log_entry.has_changed():
+                if log_entry.prev_odometry is not None and log_entry.has_changed():
+                    print "movement"
                 self.draw()
             if limit and limit == i:
                 return
@@ -219,7 +224,9 @@ class Particle:
         
         self.weight = 1
         for (exp_dist, act_dist) in zip(expected_distances, laser_entry.distances):
-            self.weight *= SensorModel.sample_observation(float(str(act_dist)), exp_dist)
+            sample = (SensorModel.sample_observation(float(str(act_dist)),
+                                                     exp_dist))**(1./len(expected_distances))
+            self.weight *= sample
 
         return
 
