@@ -48,18 +48,17 @@ def compute_weight_p(particle, laser_entry):
     """
     try:
         if not particle.map.is_free((particle.x, particle.y)) or particle.weight == 0:
-            print "setting weight to 0"
-            particle.weight = 0
-            return
+            return 0
 
         # we don't need the first two returned objects from this.
         (_, __, expected_distances) = particle.map.expected_distance(particle.x, particle.y,
                                                                  particle.theta)
         
-        particle.weight = 1
+        weight = 1
         for (exp_dist, act_dist) in zip(expected_distances, laser_entry.distances):
-            particle.weight *= (SensorModel.sample_observation(float(str(act_dist)),
+            weight *= (SensorModel.sample_observation(float(str(act_dist)),
                                                                exp_dist))**(1./len(expected_distances))
+        return weight
     except KeyboardInterrupt:
         sys.exit(1)
     
@@ -163,7 +162,7 @@ class ParticleFilter:
         it updates the weights of all the particles. If it's an Odometry object,
         it moves the particles.
         """
-        #pool = multiprocessing.Pool(processes=cpus)
+        pool = multiprocessing.Pool(processes=cpus)
         counter = 1
         for (i, log_entry) in enumerate(self.log_entries):
             print i
@@ -172,7 +171,12 @@ class ParticleFilter:
                 #self.line, = plt.plot([], [], 'g.', markersize=5)
                 #plt.imshow(plt.imread('map.png'))
                 #plt.axis([0,800,0,800])
-                [p.compute_weight(log_entry) for p in self.particles]
+                #[p.compute_weight(log_entry) for p in self.particles]
+                weights = pool.map(compute_weight_star, itertools.izip(self.particles,
+                                                                    itertools.repeat(log_entry)))
+                for (i, weight) in enumerate(weights):
+                    self.particles[i].weight = weight
+
                 #self.draw()
                 self.normalize_particle_weights()
                 self.resample()
