@@ -27,7 +27,7 @@ class MotionModel:
         trans = np.sqrt((odometry.x - prev.x)**2 + (odometry.y - prev.y)**2)
         rot2 = prev.theta - odometry.theta - rot1
 
-        rot1_hat_variance = ALPHA_1 * rot1 + ALPHA_2 * rot2
+        rot1_hat_variance = ALPHA_1 * rot1 + ALPHA_2 * trans
         trans_hat_variance = ALPHA_3 * trans + ALPHA_4 * (rot1 + rot2)
         rot2_hat_variance = ALPHA_1 * rot2 + ALPHA_2 * trans
 

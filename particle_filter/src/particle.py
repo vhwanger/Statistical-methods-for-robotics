@@ -123,6 +123,10 @@ class ParticleFilter:
     def draw(self):
         resolution = self.wean_map.parameters['resolution']
         plt.axis([0,800,0,800])
+        #for p in self.particles:
+        #    plt.arrow(p.x/resolution, p.y/resolution, (10*math.cos(p.theta)),
+        #              (10*math.sin(p.theta)), fc='c', ec='c', head_width=10,
+        #              head_length=10)
         self.line.set_xdata([p.x / resolution for p in self.particles])
         self.line.set_ydata([p.y / resolution for p in self.particles])
         plt.draw()
@@ -155,22 +159,26 @@ class ParticleFilter:
         it moves the particles.
         """
         #pool = multiprocessing.Pool(processes=cpus)
+        counter = 1
         for (i, log_entry) in enumerate(self.log_entries):
             print i
             if isinstance(log_entry, Laser):
                 #self.ax.clear()
+                #self.line, = plt.plot([], [], 'g.', markersize=5)
                 #plt.imshow(plt.imread('map.png'))
                 #plt.axis([0,800,0,800])
                 [p.compute_weight(log_entry) for p in self.particles]
                 #self.draw()
-                #pdb.set_trace()
                 self.normalize_particle_weights()
                 self.resample()
             elif isinstance(log_entry, Odometry):
                 [p.move_by(log_entry) for p in self.particles]
                 if log_entry.prev_odometry is not None and log_entry.has_changed():
                     print "movement"
-                self.draw()
+                    self.draw()
+                    #[p.draw_lasers() for p in self.particles]
+                    #pdb.set_trace()
+                    #counter += 1
             if limit and limit == i:
                 return
         return
@@ -199,7 +207,10 @@ class Particle:
         if odometry.has_changed():
             #print "Previous pose: %s %s %s" % (prev.x, prev.y, prev.theta)
             #print "Noiseless pose: %s %s %s" % (odometry.x, odometry.y, odometry.theta)
-            #print "Previous pose: %s %s %s" % (self.x, self.y, self.theta)
+            #print "Previous pose: %s %s %s" % (self.x, self.y,
+            #                                   math.degrees(self.theta))
+            (self.prev_x, self.prev_y, self.prev_theta) = (self.x, self.y,
+                                                           self.theta)
             rot1_hat, trans_hat, rot2_hat = MotionModel.sample_control(odometry)
             self.x = (self.x + 
                       trans_hat * np.cos(self.theta + rot1_hat))
@@ -209,12 +220,15 @@ class Particle:
             if self.x < 0 or self.y < 0:
                 print "WARNING - PARTICLE MOVED OFF MAP"
             
-            #print "Noisy pose: %s %s %s" % (self.x, self.y, self.theta)
+            #print "Noisy pose: %s %s %s" % (self.x, self.y,
+            #                                math.degrees(self.theta))
         return
 
-    def draw_lasers(self, xs, ys, distances):
+    def draw_lasers(self):
+        (xs, ys, expected_distances) = self.map.expected_distance(self.x, self.y,
+                                                                 self.theta)
         points = []
-        for (i, distance) in zip(range(len(xs)), distances):
+        for (i, distance) in zip(range(len(xs)), expected_distances):
             pts = zip(xs[i], ys[i])
 
             # a hack to limit the length of the ray by filtering out points that
@@ -239,7 +253,7 @@ class Particle:
         (xs, ys, expected_distances) = self.map.expected_distance(self.x, self.y,
                                                                  self.theta)
         
-        #self.draw_lasers(xs, ys, expected_distances)
+        #self.draw_lasers()
 
         self.weight = 1
         for (exp_dist, act_dist) in zip(expected_distances, laser_entry.distances):

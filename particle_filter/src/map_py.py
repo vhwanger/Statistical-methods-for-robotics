@@ -198,7 +198,7 @@ class Map:
         y_coords = None
         resolution = self.parameters['resolution']
         distance_steps = np.arange(5, MAX_DISTANCE_CM/resolution);
-        angles = np.arange(1, 180, LIDAR_ANGLE_INTERVAL) + math.degrees(theta)
+        angles = np.arange(1, 180, LIDAR_ANGLE_INTERVAL) + math.degrees(theta)-90
 
         def calc_cos(deg):
             return math.cos(math.radians(deg))
