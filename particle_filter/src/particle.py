@@ -51,7 +51,7 @@ def compute_weight_p(particle, laser_entry):
         particle.weight = 1
         for (exp_dist, act_dist) in zip(expected_distances, laser_entry.distances):
             particle.weight *= (SensorModel.sample_observation(float(str(act_dist)),
-                                                               exp_dist))**(1/9)
+                                                               exp_dist))**(1./len(expected_distances))
     except KeyboardInterrupt:
         sys.exit(1)
     
