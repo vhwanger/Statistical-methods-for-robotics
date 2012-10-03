@@ -188,7 +188,6 @@ class ParticleFilter:
                     counter += 1
             if limit and limit == i:
                 return
-        pdb.set_trace()
         return
 
 
