@@ -22,7 +22,7 @@ class WeightedDistribution:
     def __init__(self, particles):
         accum = 0.0
         self.particles = [p for p in particles if p.weight > 0]
-        self.r = random.uniform(0,1) * 1./len(self.particles)
+        self.r = random.uniform(0,1) * 1./len(self.particles) + 1e-15
         self.interval = 1. / len(self.particles)
         self.distribution = []
         for x in self.particles:
@@ -31,12 +31,14 @@ class WeightedDistribution:
 
     def pick(self):
         try:
-            index = self.particles[bisect.bisect_left(self.distribution, self.r)]
+            index = self.particles[bisect.bisect_left(self.distribution,
+                                                      random.uniform(0,1))]
             self.r += self.interval
             return index
 
         except IndexError:
             # Happens when all particles are improbable w=0
+            print "all are zero"
             return None
 
 def compute_weight_p(particle, laser_entry):
@@ -123,14 +125,17 @@ class ParticleFilter:
     def draw(self):
         resolution = self.wean_map.parameters['resolution']
         plt.axis([0,800,0,800])
-        #for p in self.particles:
-        #    plt.arrow(p.x/resolution, p.y/resolution, (10*math.cos(p.theta)),
-        #              (10*math.sin(p.theta)), fc='c', ec='c', head_width=10,
-        #              head_length=10)
         self.line.set_xdata([p.x / resolution for p in self.particles])
         self.line.set_ydata([p.y / resolution for p in self.particles])
         plt.draw()
         time.sleep(.001)
+    
+    def draw_arrows(self):
+        resolution = self.wean_map.parameters['resolution']
+        for p in self.particles:
+            plt.arrow(p.x/resolution, p.y/resolution, (10*math.cos(p.theta)),
+                      (10*math.sin(p.theta)), fc='c', ec='c', head_width=10,
+                      head_length=10)
 
     def compute_variance(self):
         return np.var([p.weight for p in self.particles])
@@ -147,7 +152,7 @@ class ParticleFilter:
                 if p is None:
                     new_particle = self.create_random()
                 else:
-                    new_particle = Particle(p.x, p.y, self.wean_map)
+                    new_particle = Particle(p.x, p.y, self.wean_map, p.theta)
                 new_particles.append(new_particle)
             self.particles = new_particles
         return
@@ -175,19 +180,25 @@ class ParticleFilter:
                 [p.move_by(log_entry) for p in self.particles]
                 if log_entry.prev_odometry is not None and log_entry.has_changed():
                     print "movement"
+                    #if counter % 100 == 0:
+                    #    self.draw_arrows()
                     self.draw()
                     #[p.draw_lasers() for p in self.particles]
                     #pdb.set_trace()
-                    #counter += 1
+                    counter += 1
             if limit and limit == i:
                 return
+        pdb.set_trace()
         return
 
 
 class Particle:
     def __init__(self, x, y, map, theta=None):
         self.x, self.y = (x, y)
-        self.theta = math.radians(random.randint(1, 360))
+        if theta is None:
+            self.theta = math.radians(random.randint(1, 360))
+        else:
+            self.theta = theta
         self.map = map
         self.weight = 1
 

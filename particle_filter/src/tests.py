@@ -47,7 +47,9 @@ class TestSensorModel(unittest.TestCase):
         y = []
         x = np.arange(1, MAX_DISTANCE_CM + 1)
         for i in x:
-            y.append(SensorModel.sample_observation(i, 300))
+            y.append(SensorModel.sample_observation(i, 2000))
+        print SensorModel.sample_observation(8183,2000)
+        print SensorModel.sample_observation(8182,2000)
         plt.plot(x, y)
         plt.show()
 
