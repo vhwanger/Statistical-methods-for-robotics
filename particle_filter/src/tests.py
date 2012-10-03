@@ -4,7 +4,7 @@ import pdb
 import numpy as np
 import matplotlib.pyplot as plt
 from constants import MAX_DISTANCE_CM
-from map import Map
+from map_py import Map
 from particle import SensorModel, ParticleFilter
 
 class TestMapFunctions(unittest.TestCase):
@@ -16,9 +16,9 @@ class TestMapFunctions(unittest.TestCase):
         Tests the expected distance function and plots what the rays its
         generating look like
         """
-        x = 3000
-        y = 4150
-        theta = 30
+        x = 5860
+        y = 5450
+        theta = 3.08923277603
         (xs, ys, distances) = self.wean_map.expected_distance(x, y, theta)
 
         points = []
@@ -35,7 +35,7 @@ class TestMapFunctions(unittest.TestCase):
         plt.imshow(plt.imread('map.png'))
 
         plt.axis([0,800,0,800])
-        for ray in points[-4:-1]:
+        for ray in points:
             plt.plot([p[0] for p in ray], [p[1] for p in ray], markersize=100)
         plt.show()
 
@@ -47,7 +47,7 @@ class TestSensorModel(unittest.TestCase):
         y = []
         x = np.arange(1, MAX_DISTANCE_CM + 1)
         for i in x:
-            y.append(SensorModel.sample_observation(i, 2000))
+            y.append(SensorModel.sample_observation(i, 300))
         plt.plot(x, y)
         plt.show()
 

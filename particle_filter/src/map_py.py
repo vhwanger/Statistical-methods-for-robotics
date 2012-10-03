@@ -149,7 +149,7 @@ class Map:
 
             # look up all the coordinates in the map and find where the map is
             # less than or equal to zero (this is a wall)
-            ray_values, = np.where(self.map[ray_coords[:,0], ray_coords[:,1]] <= 0)
+            ray_values, = np.where(self.map[ray_coords[:,0], ray_coords[:,1]] <= .5)
 
             # some special exceptions
             if not ray_values.shape[0]:
@@ -198,7 +198,7 @@ class Map:
         y_coords = None
         resolution = self.parameters['resolution']
         distance_steps = np.arange(5, MAX_DISTANCE_CM/resolution);
-        angles = np.arange(1, 180, LIDAR_ANGLE_INTERVAL) + theta
+        angles = np.arange(1, 180, LIDAR_ANGLE_INTERVAL) + math.degrees(theta)
 
         def calc_cos(deg):
             return math.cos(math.radians(deg))

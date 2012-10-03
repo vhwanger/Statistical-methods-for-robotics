@@ -88,7 +88,7 @@ class ParticleFilter:
         plt.imshow(plt.imread('map.png'))
         plt.axis([0,800,0,800])
         self.ax = self.figure.add_subplot(111)
-        self.line, = plt.plot([], [], 'g.', markersize=3)
+        self.line, = plt.plot([], [], 'g.', markersize=5)
 
         # get data
         if CYTHON:
@@ -158,9 +158,12 @@ class ParticleFilter:
         for (i, log_entry) in enumerate(self.log_entries):
             print i
             if isinstance(log_entry, Laser):
+                #self.ax.clear()
+                #plt.imshow(plt.imread('map.png'))
+                #plt.axis([0,800,0,800])
                 [p.compute_weight(log_entry) for p in self.particles]
-                #pool.map(compute_weight_star, itertools.izip(self.particles,
-                                                             #itertools.repeat(log_entry)))
+                #self.draw()
+                #pdb.set_trace()
                 self.normalize_particle_weights()
                 self.resample()
             elif isinstance(log_entry, Odometry):
@@ -209,6 +212,20 @@ class Particle:
             #print "Noisy pose: %s %s %s" % (self.x, self.y, self.theta)
         return
 
+    def draw_lasers(self, xs, ys, distances):
+        points = []
+        for (i, distance) in zip(range(len(xs)), distances):
+            pts = zip(xs[i], ys[i])
+
+            # a hack to limit the length of the ray by filtering out points that
+            # are farther than the computed distance
+            ray = [p for p in pts if math.sqrt((p[0]-self.x/10)**2 + (p[1]-self.y/10)**2) <
+                   distance]
+            points.append(ray)
+        for ray in points:
+            plt.plot([p[0] for p in ray], [p[1] for p in ray], markersize=100)
+        plt.draw()
+
     def compute_weight(self, laser_entry):
         """
         Takes in a laser log entry and calculates how well the particle matches
@@ -219,9 +236,11 @@ class Particle:
             return
 
         # we don't need the first two returned objects from this.
-        (_, __, expected_distances) = self.map.expected_distance(self.x, self.y,
+        (xs, ys, expected_distances) = self.map.expected_distance(self.x, self.y,
                                                                  self.theta)
         
+        #self.draw_lasers(xs, ys, expected_distances)
+
         self.weight = 1
         for (exp_dist, act_dist) in zip(expected_distances, laser_entry.distances):
             sample = (SensorModel.sample_observation(float(str(act_dist)),
