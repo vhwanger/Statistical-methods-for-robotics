@@ -22,6 +22,7 @@ class WeightedDistribution:
     def __init__(self, particles):
         accum = 0.0
         self.particles = [p for p in particles if p.weight > 0]
+        print len(self.particles)
         self.distribution = []
         for x in self.particles:
             accum += x.weight
@@ -41,6 +42,7 @@ def compute_weight_p(particle, laser_entry):
     """
     try:
         if not particle.map.is_free((particle.x, particle.y)) or particle.weight == 0:
+            print "setting weight to 0"
             particle.weight = 0
             return
 
@@ -89,7 +91,7 @@ class ParticleFilter:
             self.wean_map = map_c.Map('../data/map/wean.dat')
         else:
             self.wean_map = map_py.Map('../data/map/wean.dat')
-        log_file = Log('../data/log/robotdata1.log')
+        log_file = Log('../data/log/robotdata2.log')
         self.log_entries = log_file.iterator()
 
         # initialize uniform random particles across all open cells
@@ -148,13 +150,13 @@ class ParticleFilter:
         it updates the weights of all the particles. If it's an Odometry object,
         it moves the particles.
         """
-        pool = multiprocessing.Pool(processes=cpus)
+        #pool = multiprocessing.Pool(processes=cpus)
         for (i, log_entry) in enumerate(self.log_entries):
             print i
             if isinstance(log_entry, Laser):
-                #[p.compute_weight(log_entry) for p in self.particles]
-                pool.map(compute_weight_star, itertools.izip(self.particles,
-                                                             itertools.repeat(log_entry)))
+                [p.compute_weight(log_entry) for p in self.particles]
+                #pool.map(compute_weight_star, itertools.izip(self.particles,
+                                                             #itertools.repeat(log_entry)))
                 self.normalize_particle_weights()
                 self.resample()
             elif isinstance(log_entry, Odometry):
@@ -202,24 +204,24 @@ class Particle:
             #print "Noisy pose: %s %s %s" % (self.x, self.y, self.theta)
         return
 
-    #def compute_weight(self, laser_entry):
-    #    """
-    #    Takes in a laser log entry and calculates how well the particle matches
-    #    the log entry.
-    #    """
-    #    if not self.map.is_free((self.x, self.y)) or self.weight == 0:
-    #        self.weight = 0
-    #        return
+    def compute_weight(self, laser_entry):
+        """
+        Takes in a laser log entry and calculates how well the particle matches
+        the log entry.
+        """
+        if not self.map.is_free((self.x, self.y)) or self.weight == 0:
+            self.weight = 0
+            return
 
-    #    # we don't need the first two returned objects from this.
-    #    (_, __, expected_distances) = self.map.expected_distance(self.x, self.y,
-    #                                                             self.theta)
-    #    
-    #    self.weight = 1
-    #    for (exp_dist, act_dist) in zip(expected_distances, laser_entry.distances):
-    #        self.weight *= SensorModel.sample_observation(float(str(act_dist)), exp_dist)
+        # we don't need the first two returned objects from this.
+        (_, __, expected_distances) = self.map.expected_distance(self.x, self.y,
+                                                                 self.theta)
+        
+        self.weight = 1
+        for (exp_dist, act_dist) in zip(expected_distances, laser_entry.distances):
+            self.weight *= SensorModel.sample_observation(float(str(act_dist)), exp_dist)
 
-    #    return
+        return
 
 
 
