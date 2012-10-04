@@ -162,8 +162,9 @@ class Map:
                 end_of_ray = ray_coords[ray_values.item(0)]
 
             # find the distance from the originating point
-            distance = math.sqrt((end_of_ray.item(0) - x/resolution)**2 + 
-                                 (end_of_ray.item(1) - y/resolution)**2)
+            distance = (math.sqrt((end_of_ray.item(0) - x/resolution)**2 +
+                                  (end_of_ray.item(1) - y/resolution)**2) *
+                        resolution)
 
             ray_distances.append(distance)
         return ray_distances

@@ -28,7 +28,7 @@ class TestMapFunctions(unittest.TestCase):
             # a hack to limit the length of the ray by filtering out points that
             # are farther than the computed distance
             ray = [p for p in pts if math.sqrt((p[0]-x/10)**2 + (p[1]-y/10)**2) <
-                   distance]
+                   distance/10]
             points.append(ray)
 
         plt.figure()

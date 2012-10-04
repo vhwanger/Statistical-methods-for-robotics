@@ -156,6 +156,9 @@ class ParticleFilter:
             self.particles = new_particles
         return
 
+    def reset_figure(self):
+        self.ax.cla()
+
     def run(self, limit=None):
         """
         Iterates through all the log entries. If the log entry is a Laser object,
@@ -177,16 +180,28 @@ class ParticleFilter:
                 for (i, weight) in enumerate(weights):
                     self.particles[i].weight = weight
 
+                #max_weight = max([p.weight for p in self.particles])
+                #best_particle = [p for p in self.particles if p.weight == max_weight][0]
+                #for p in self.particles:
+                #    axis = p.print_actual_reading(log_entry, self.ax)
+                #    print p.weight
+                #    pdb.set_trace()
+                #best_particle.print_actual_reading(log_entry, self.ax)
+                #plt.draw()
+                #pdb.set_trace()
+                #for line in self.ax.lines:
+                #    self.ax.lines.pop(0)
+                #plt.draw()
                 #self.draw()
                 self.normalize_particle_weights()
                 self.resample()
             elif isinstance(log_entry, Odometry):
                 [p.move_by(log_entry) for p in self.particles]
+                self.draw()
                 if log_entry.prev_odometry is not None and log_entry.has_changed():
                     print "movement"
                     #if counter % 100 == 0:
                     #    self.draw_arrows()
-                    self.draw()
                     #[p.draw_lasers() for p in self.particles]
                     #pdb.set_trace()
                     counter += 1
@@ -208,6 +223,26 @@ class Particle:
     def __repr__(self):
         return "(x=%s, y=%s, theta=%s, weight=%s)" % (self.x, self.y,
                                                       self.theta, self.weight)
+
+    def print_actual_reading(self, laser_reading, axis):
+        (xs, ys, distances) = self.map.expected_distance(self.x, self.y,
+                                                              self.theta)
+
+        points = []
+        for (i, distance) in zip(range(len(xs)), laser_reading.distances):
+            pts = zip(xs[i], ys[i])
+
+            # a hack to limit the length of the ray by filtering out points that
+            # are farther than the computed distance
+            ray = [p for p in pts if math.sqrt((p[0]-self.x/10)**2 + (p[1]-self.y/10)**2) <
+                   distance/10]
+            points.append(ray)
+
+        for ray in points:
+            axis.plot([p[0] for p in ray], [p[1] for p in ray], markersize=100)
+        return axis
+
+
 
     def move_by(self, odometry):
         """
