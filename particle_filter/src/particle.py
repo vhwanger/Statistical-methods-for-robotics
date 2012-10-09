@@ -85,6 +85,7 @@ class ParticleFilter:
         # initialize the drawing figure
         plt.ion()
         self.figure = plt.figure()
+        self.pic_id = 1
         plt.draw()
         plt.imshow(plt.imread('map.png'))
         plt.axis([0,800,0,800])
@@ -127,6 +128,8 @@ class ParticleFilter:
         self.line.set_xdata([p.x / resolution for p in self.particles])
         self.line.set_ydata([p.y / resolution for p in self.particles])
         plt.draw()
+        self.figure.savefig('pic%s.png' % self.pic_id)
+        self.pic_id += 1
         time.sleep(.001)
     
     def draw_arrows(self):
