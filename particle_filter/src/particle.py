@@ -164,7 +164,7 @@ class ParticleFilter:
 
     def draw_best_range(self, log_entry):
         self.ax.clear()
-        self.line, = plt.plot([], [], 'g.', markersize=5)
+        self.line, = self.ax.plot([], [], 'g.', markersize=5)
         plt.imshow(plt.imread('map.png'))
         plt.axis([0,800,0,800])
 
@@ -176,7 +176,6 @@ class ParticleFilter:
         #    pdb.set_trace()
         best_particle.print_actual_reading(log_entry, self.ax)
         plt.draw()
-        pdb.set_trace()
         self.draw()
 
     def run(self, limit=None):
@@ -199,7 +198,7 @@ class ParticleFilter:
                         self.particles[i].weight = weight
 
                     #if counter % 10 == 0:
-                    #    self.draw_best_range(log_entry)
+                    self.draw_best_range(log_entry)
                     #counter += 1
 
                     #if counter < 10:
@@ -251,8 +250,13 @@ class Particle:
                    distance/10]
             points.append(ray)
 
+        plot_xs = []
+        plot_ys = []
         for ray in points:
-            axis.plot([p[0] for p in ray], [p[1] for p in ray], markersize=100)
+            plot_xs += [p[0] for p in ray]
+            plot_ys += [p[1] for p in ray]
+        axis.plot(plot_xs, plot_ys, markersize=100)
+
         return axis
 
 
