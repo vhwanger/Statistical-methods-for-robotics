@@ -159,6 +159,23 @@ class ParticleFilter:
     def reset_figure(self):
         self.ax.cla()
 
+    def draw_best_range(self, log_entry):
+        self.ax.clear()
+        self.line, = plt.plot([], [], 'g.', markersize=5)
+        plt.imshow(plt.imread('map.png'))
+        plt.axis([0,800,0,800])
+
+        max_weight = max([p.weight for p in self.particles])
+        best_particle = [p for p in self.particles if p.weight == max_weight][0]
+        #for p in self.particles:
+        #    axis = p.print_actual_reading(log_entry, self.ax)
+        #    print p.weight
+        #    pdb.set_trace()
+        best_particle.print_actual_reading(log_entry, self.ax)
+        plt.draw()
+        pdb.set_trace()
+        self.draw()
+
     def run(self, limit=None):
         """
         Iterates through all the log entries. If the log entry is a Laser object,
@@ -167,44 +184,37 @@ class ParticleFilter:
         """
         pool = multiprocessing.Pool(processes=cpus)
         counter = 1
+        has_moved = False
         for (i, log_entry) in enumerate(self.log_entries):
             print i
             if isinstance(log_entry, Laser):
-                #self.ax.clear()
-                #self.line, = plt.plot([], [], 'g.', markersize=5)
-                #plt.imshow(plt.imread('map.png'))
-                #plt.axis([0,800,0,800])
                 #[p.compute_weight(log_entry) for p in self.particles]
-                weights = pool.map(compute_weight_star, itertools.izip(self.particles,
-                                                                    itertools.repeat(log_entry)))
-                for (i, weight) in enumerate(weights):
-                    self.particles[i].weight = weight
+                if has_moved:
+                    weights = pool.map(compute_weight_star, itertools.izip(self.particles,
+                                                                        itertools.repeat(log_entry)))
+                    for (i, weight) in enumerate(weights):
+                        self.particles[i].weight = weight
 
-                #max_weight = max([p.weight for p in self.particles])
-                #best_particle = [p for p in self.particles if p.weight == max_weight][0]
-                #for p in self.particles:
-                #    axis = p.print_actual_reading(log_entry, self.ax)
-                #    print p.weight
-                #    pdb.set_trace()
-                #best_particle.print_actual_reading(log_entry, self.ax)
-                #plt.draw()
-                #pdb.set_trace()
-                #for line in self.ax.lines:
-                #    self.ax.lines.pop(0)
-                #plt.draw()
-                #self.draw()
-                self.normalize_particle_weights()
-                self.resample()
+                    #if counter % 10 == 0:
+                    #    self.draw_best_range(log_entry)
+                    #counter += 1
+
+                    #if counter < 10:
+                    self.normalize_particle_weights()
+                    self.resample()
             elif isinstance(log_entry, Odometry):
                 [p.move_by(log_entry) for p in self.particles]
                 self.draw()
                 if log_entry.prev_odometry is not None and log_entry.has_changed():
                     print "movement"
+                    has_moved = True
                     #if counter % 100 == 0:
                     #    self.draw_arrows()
                     #[p.draw_lasers() for p in self.particles]
                     #pdb.set_trace()
                     counter += 1
+                else:
+                    has_moved = False
             if limit and limit == i:
                 return
         return

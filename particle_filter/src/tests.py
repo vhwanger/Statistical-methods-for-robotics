@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 from constants import MAX_DISTANCE_CM
 from map_py import Map
 from particle import SensorModel, ParticleFilter
+from log import Odometry
+from models import MotionModel
 
 class TestMapFunctions(unittest.TestCase):
     def setUp(self):
@@ -53,6 +55,46 @@ class TestSensorModel(unittest.TestCase):
         plt.plot(x, y)
         plt.show()
 
+
+class TestMotionModel(unittest.TestCase):
+    def setUp(self):
+        self.odometry = Odometry('O -91.694 -150.113998 -1.336922 4.000403')
+        prev_odometry = Odometry('O -92.456001 -147.320007 -1.336922 3.850964')
+        self.odometry.prev_odometry = prev_odometry
+
+    def testMotionModel(self):
+        plt.plot([self.odometry.prev_odometry.x],
+                 [self.odometry.prev_odometry.y], '.g', markersize=20)
+        plt.arrow(self.odometry.x, self.odometry.y,
+                  .07*(math.cos(self.odometry.theta)),
+                  (math.sin(self.odometry.theta)*.07), fc='g', ec='g',
+                  head_width=.03,
+                  head_length=.03)
+        plt.plot([self.odometry.x],
+                 [self.odometry.y], '.g', markersize=20)
+        plt.arrow(self.odometry.prev_odometry.x, self.odometry.prev_odometry.y,
+                  .07*(math.cos(self.odometry.prev_odometry.theta)),
+                  (math.sin(self.odometry.prev_odometry.theta)*.07), fc='g', ec='g',
+                  head_width=.03,
+                  head_length=.03)
+        next_xs = []
+        next_ys = []
+        for _ in range(500):
+            rot1_hat, trans_hat, rot2_hat = MotionModel.sample_control(self.odometry)
+            next_x = (self.odometry.prev_odometry.x + 
+                      trans_hat * np.cos(self.odometry.prev_odometry.theta + rot1_hat))
+            next_xs.append(next_x)
+            next_y = (self.odometry.prev_odometry.y + 
+                      trans_hat * np.sin(self.odometry.prev_odometry.theta + rot1_hat))
+            next_ys.append(next_y)
+            next_theta = self.odometry.prev_odometry.theta + rot1_hat + rot2_hat
+            plt.arrow(next_x, next_y, .07*(math.cos(next_theta)),
+                      (math.sin(next_theta)*.07), fc='c', ec='c',
+                      head_width=.03,
+                      head_length=.03)
+        #plt.plot(next_xs, next_ys, '.c', markersize=5)
+        plt.axis('equal')
+        plt.show()
 
 class TestParticleFilter(unittest.TestCase):
     def setUp(self):
