@@ -128,7 +128,7 @@ class ParticleFilter:
         self.line.set_xdata([p.x / resolution for p in self.particles])
         self.line.set_ydata([p.y / resolution for p in self.particles])
         plt.draw()
-        self.figure.savefig('pic%s.png' % self.pic_id)
+        #self.figure.savefig('pic%s.png' % self.pic_id)
         self.pic_id += 1
         time.sleep(.001)
     
@@ -177,6 +177,31 @@ class ParticleFilter:
         best_particle.print_actual_reading(log_entry, self.ax)
         plt.draw()
         self.draw()
+        self.draw_expected_reading(best_particle)
+
+    def draw_expected_reading(self, particle):
+        (xs, ys, distances) = self.wean_map.expected_distance(particle.x,
+                                                              particle.y,
+                                                              particle.theta)
+
+        points = []
+        for (i, distance) in zip(range(len(xs)), distances):
+            pts = zip(xs[i], ys[i])
+
+            # a hack to limit the length of the ray by filtering out points that
+            # are farther than the computed distance
+            ray = [p for p in pts if math.sqrt((p[0]-particle.x/10)**2 +
+                                               (p[1]-particle.y/10)**2) <
+                   distance/10]
+            points.append(ray)
+        plot_xs = []
+        plot_ys = []
+        for ray in points:
+            plot_xs += [p[0] for p in ray]
+            plot_ys += [p[1] for p in ray]
+
+        self.ax.plot(plot_xs, plot_ys, 'c-', markersize=100)
+        plt.draw()
 
     def run(self, limit=None):
         """
@@ -198,7 +223,7 @@ class ParticleFilter:
                         self.particles[i].weight = weight
 
                     #if counter % 10 == 0:
-                    self.draw_best_range(log_entry)
+                    #self.draw_best_range(log_entry)
                     #counter += 1
 
                     #if counter < 10:
@@ -210,8 +235,8 @@ class ParticleFilter:
                 if log_entry.prev_odometry is not None and log_entry.has_changed():
                     print "movement"
                     has_moved = True
-                    #if counter % 100 == 0:
-                    #    self.draw_arrows()
+                    if counter % 100 == 0:
+                        self.draw_arrows()
                     #[p.draw_lasers() for p in self.particles]
                     #pdb.set_trace()
                     counter += 1

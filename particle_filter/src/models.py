@@ -6,8 +6,8 @@ import pdb
 from constants import (MAX_DISTANCE_CM, ZMAX, ZHIT, ZNOISE, ZSHORT, HIT_SIGMA,
                        SHORT_NOISE_LAMBDA)
 
-ALPHA_1 = .05
-ALPHA_2 = .1
+ALPHA_1 = .01
+ALPHA_2 = .01
 ALPHA_3 = .1
 ALPHA_4 = .1
 

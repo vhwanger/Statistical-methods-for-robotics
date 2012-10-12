@@ -18,10 +18,11 @@ class TestMapFunctions(unittest.TestCase):
         Tests the expected distance function and plots what the rays its
         generating look like
         """
-        x = 5860
-        y = 5450
-        theta = 3.08923277603
+        x = 4000
+        y = 4140
+        theta = -math.pi/2
         (xs, ys, distances) = self.wean_map.expected_distance(x, y, theta)
+        print distances
 
         points = []
         for (i, distance) in zip(range(len(xs)), distances):

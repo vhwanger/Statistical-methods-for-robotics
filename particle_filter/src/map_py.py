@@ -162,9 +162,8 @@ class Map:
                 end_of_ray = ray_coords[ray_values.item(0)]
 
             # find the distance from the originating point
-            distance = (math.sqrt((end_of_ray.item(0) - x/resolution)**2 +
-                                  (end_of_ray.item(1) - y/resolution)**2) *
-                        resolution)
+            distance = (math.sqrt((end_of_ray.item(0)*resolution - x)**2 +
+                                  (end_of_ray.item(1)*resolution - y)**2))
 
             ray_distances.append(distance)
         return ray_distances
@@ -197,8 +196,10 @@ class Map:
         distances = None
         x_coords = None
         y_coords = None
+        x = x + 25*math.cos(theta)
+        y = y + 25*math.sin(theta)
         resolution = self.parameters['resolution']
-        distance_steps = np.arange(5, MAX_DISTANCE_CM/resolution);
+        distance_steps = np.arange(0, MAX_DISTANCE_CM/resolution);
         angles = np.arange(1, 180, LIDAR_ANGLE_INTERVAL) + math.degrees(theta)-90
 
         def calc_cos(deg):
