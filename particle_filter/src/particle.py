@@ -7,13 +7,7 @@ import numpy as np
 import math
 from constants import PARTICLE_COUNT, VARIANCE_THRESHOLD
 from models import SensorModel, MotionModel
-#try:
-#    import pyximport; pyximport.install()
-#    import map_c
-#    CYTHON = True
-#except:
 import map_py
-CYTHON = False
 from log import Log, Laser, Odometry
 
 DEBUG = True
@@ -93,10 +87,7 @@ class ParticleFilter:
         self.line, = plt.plot([], [], 'g.', markersize=5)
 
         # get data
-        if CYTHON:
-            self.wean_map = map_c.Map('../data/map/wean.dat')
-        else:
-            self.wean_map = map_py.Map('../data/map/wean.dat')
+        self.wean_map = map_py.Map('../data/map/wean.dat')
         log_file = Log('../data/log/robotdata1.log')
         self.log_entries = log_file.iterator()
 
@@ -128,9 +119,9 @@ class ParticleFilter:
         self.line.set_xdata([p.x / resolution for p in self.particles])
         self.line.set_ydata([p.y / resolution for p in self.particles])
         plt.draw()
-        #self.figure.savefig('pic%s.png' % self.pic_id)
+        self.figure.savefig('pic%s.png' % self.pic_id)
         self.pic_id += 1
-        time.sleep(.001)
+        #time.sleep(.001)
     
     def draw_arrows(self):
         resolution = self.wean_map.parameters['resolution']
@@ -177,7 +168,9 @@ class ParticleFilter:
         best_particle.print_actual_reading(log_entry, self.ax)
         plt.draw()
         self.draw()
+        pdb.set_trace()
         self.draw_expected_reading(best_particle)
+        pdb.set_trace()
 
     def draw_expected_reading(self, particle):
         (xs, ys, distances) = self.wean_map.expected_distance(particle.x,
@@ -225,6 +218,7 @@ class ParticleFilter:
                     #if counter % 10 == 0:
                     #self.draw_best_range(log_entry)
                     #counter += 1
+                    #pdb.set_trace()
 
                     #if counter < 10:
                     self.normalize_particle_weights()
@@ -235,8 +229,8 @@ class ParticleFilter:
                 if log_entry.prev_odometry is not None and log_entry.has_changed():
                     print "movement"
                     has_moved = True
-                    if counter % 100 == 0:
-                        self.draw_arrows()
+                    #if counter % 10 == 0:
+                    #    self.draw_arrows()
                     #[p.draw_lasers() for p in self.particles]
                     #pdb.set_trace()
                     counter += 1
