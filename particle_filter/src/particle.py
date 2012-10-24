@@ -88,7 +88,7 @@ class ParticleFilter:
 
         # get data
         self.wean_map = map_py.Map('../data/map/wean.dat')
-        log_file = Log('../data/log/robotdata1.log')
+        log_file = Log('../data/log/robotdata3.log')
         self.log_entries = log_file.iterator()
 
         # initialize uniform random particles across all open cells
@@ -168,9 +168,9 @@ class ParticleFilter:
         best_particle.print_actual_reading(log_entry, self.ax)
         plt.draw()
         self.draw()
-        pdb.set_trace()
-        self.draw_expected_reading(best_particle)
-        pdb.set_trace()
+        #pdb.set_trace()
+        #self.draw_expected_reading(best_particle)
+        #pdb.set_trace()
 
     def draw_expected_reading(self, particle):
         (xs, ys, distances) = self.wean_map.expected_distance(particle.x,
@@ -216,7 +216,7 @@ class ParticleFilter:
                         self.particles[i].weight = weight
 
                     #if counter % 10 == 0:
-                    #self.draw_best_range(log_entry)
+                    self.draw_best_range(log_entry)
                     #counter += 1
                     #pdb.set_trace()
 
