@@ -1,7 +1,7 @@
 import pdb
 import random
 import numpy as np
-LAMBDA = .9
+LAMBDA = .6
 
 class SVR:
     def __init__(self, nodes, class_labels):
@@ -31,7 +31,7 @@ class SVR:
 
         counter = 1
         for label, feature in self.nodes:
-            #ALPHA = 1./np.sqrt(counter)
+            ALPHA = 1./np.sqrt(counter)
             margin_value = 1 - label * np.dot(w, feature)
 
             # if we don't meet the hard margin constraint
