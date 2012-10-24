@@ -14,7 +14,8 @@ def parse_file(filename):
     for node in data:
         label = int(node[4])
         features = map(float, node[5:])
-        node_features.append((label, features))
+        coord = map(float, node[0:3])
+        node_features.append((label, features, coord))
     return node_features
 
 
