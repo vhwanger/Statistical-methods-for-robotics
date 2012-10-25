@@ -1,28 +1,20 @@
+"""
+Module for support vector machine
+"""
 import pdb
-import random
 import numpy as np
+from constants import (COORDS, X_COORD, Y_COORD, Z_COORD)
 LAMBDA = .6
 
-class SVR:
-    def __init__(self, nodes, class_labels):
+class SVM:
+    def __init__(self, logdata, class_labels):
         """
         class_labels is a tuple describing the two labels you'd like to classify:
             class_labels = (1004, 1400)
         """
-        self.nodes = self.filter_two_classes(nodes, class_labels)
+        self.nodes = logdata.filter_two_classes(class_labels)
         self.fit()
         return
-
-    def filter_two_classes(self, nodes, class_labels):
-        neg_class_label = class_labels[0]
-        pos_class_label = class_labels[1]
-
-        neg_class = [(-1, np.array(p[1])) for p in nodes if p[0]== neg_class_label]
-        pos_class = [(1, np.array(p[1])) for p in nodes if p[0] == pos_class_label]
-
-        all_classes = neg_class + pos_class
-        random.shuffle(all_classes)
-        return all_classes
 
     def fit(self):
         n_features = len(self.nodes[0][1])
@@ -30,7 +22,7 @@ class SVR:
         ALPHA = 1/np.sqrt(len(self.nodes))
 
         counter = 1
-        for label, feature in self.nodes:
+        for label, feature, _ in self.nodes:
             ALPHA = 1./np.sqrt(counter)
             margin_value = 1 - label * np.dot(w, feature)
 
@@ -48,3 +40,26 @@ class SVR:
 
     def predict(self, feature):
         return np.dot(self.w, feature)
+
+    def predict_and_plot(self, test_data, ax):
+        neg_class = []
+        pos_class = []
+        for el in test_data:
+            if self.predict(el[1]) < 0:
+                neg_class.append(el)
+            else:
+                pos_class.append(el)
+
+        xs = [p[COORDS][X_COORD] for p in neg_class]
+        ys = [p[COORDS][Y_COORD] for p in neg_class]
+        zs = [p[COORDS][Z_COORD] for p in neg_class]
+
+        ax.plot(xs, ys, zs, 'g.', markersize=3)
+
+        xs = [p[COORDS][X_COORD] for p in pos_class]
+        ys = [p[COORDS][Y_COORD] for p in pos_class]
+        zs = [p[COORDS][Z_COORD] for p in pos_class]
+
+        ax.plot(xs, ys, zs, '.', markersize=3)
+
+
