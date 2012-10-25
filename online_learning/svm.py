@@ -3,7 +3,11 @@ Module for support vector machine
 """
 import pdb
 import numpy as np
-from constants import (COORDS, X_COORD, Y_COORD, Z_COORD)
+import matplotlib.pyplot as plt
+import pdb
+from mpl_toolkits.mplot3d import Axes3D
+from log import LogData
+from constants import (COORDS, X_COORD, Y_COORD, Z_COORD, GROUND, FACADE)
 LAMBDA = .9
 
 class SVM:
@@ -69,4 +73,16 @@ class SVM:
 
         ax.plot(xs, ys, zs, '.', markersize=3)
 
+if __name__ == '__main__':
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
 
+    # we train on log1, then classify log2
+    log1 = LogData('oakland_part3_am_rf.node_features')
+    log2 = LogData('oakland_part3_an_rf.node_features')
+    
+    svm = SVM(log1, (GROUND, FACADE))
+    test_classes = log2.filter_data((GROUND, FACADE))
+    svm.predict_and_plot(test_classes, ax)
+
+    plt.show()
