@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import pdb
-import svr
+import svm
 from log import LogData
 from constants import (GROUND, FACADE)
 
@@ -15,9 +15,9 @@ if __name__ == '__main__':
 
     
     # run support vector code
-    svr = svr.SVM(log1, (GROUND, FACADE))
+    svm = svm.SVM(log1, (GROUND, FACADE))
     test_classes = log2.filter_data((GROUND, FACADE))
-    svr.predict_and_plot(test_classes, ax)
+    svm.predict_and_plot(test_classes, ax)
 
 
 

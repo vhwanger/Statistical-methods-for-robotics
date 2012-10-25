@@ -58,6 +58,18 @@ class LogData:
         return all_classes
 
     def filter_data(self, class_labels):
+        """
+        Input is a tuple or list containing the all the classes you'd like to be
+        placed into the output list. For example, if you'd like all the data
+        points for GROUND, FACADE, and WIRE, you'd do:
+
+            log.filter_data((GROUND, FACADE, WIRE))
+
+        And you'd get back something like:
+
+            [(1400, [features], [coords]), (1004, [features], [coords]), ...]
+
+        """
         nodes = []
         for label in class_labels:
             nodes += [p for p in self.data if p[0] == label]
@@ -65,6 +77,14 @@ class LogData:
         return nodes
 
     def plot_classes(self, ax, class_labels):
+        """
+        Given a plt axis and a set of labels of the form:
+
+            log.plt(ax, (GROUND, FACADE, WIRE))
+
+        it will plot each class onto the given axis. They will be different
+        colors as well.
+        """
         for label in class_labels:
             data = self.filter_data((label,))
 
@@ -72,4 +92,4 @@ class LogData:
             ys = [p[COORDS][Y_COORD] for p in data]
             zs = [p[COORDS][Z_COORD] for p in data]
 
-            ax.plot(xs, ys, zs, '.')
+            ax.plot(xs, ys, zs, '.', markersize=3)

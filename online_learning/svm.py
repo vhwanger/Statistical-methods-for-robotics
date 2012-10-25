@@ -4,7 +4,7 @@ Module for support vector machine
 import pdb
 import numpy as np
 from constants import (COORDS, X_COORD, Y_COORD, Z_COORD)
-LAMBDA = .6
+LAMBDA = .9
 
 class SVM:
     def __init__(self, logdata, class_labels):
@@ -13,7 +13,14 @@ class SVM:
             class_labels = (1004, 1400)
         """
         self.nodes = logdata.filter_two_classes(class_labels)
+        self.normalize_features()
         self.fit()
+        return
+
+    def normalize_features(self):
+        mean_v = sum([p[1] for p in self.nodes])/len(self.nodes)
+        std_dev = np.std([p[1] for p in self.nodes])
+        self.nodes = [(p[0], (p[1]- mean_v)/std_dev, p[2]) for p in self.nodes]
         return
 
     def fit(self):
@@ -23,7 +30,7 @@ class SVM:
 
         counter = 1
         for label, feature, _ in self.nodes:
-            ALPHA = 1./np.sqrt(counter)
+            #ALPHA = 1./np.sqrt(counter)
             margin_value = 1 - label * np.dot(w, feature)
 
             # if we don't meet the hard margin constraint
@@ -54,7 +61,7 @@ class SVM:
         ys = [p[COORDS][Y_COORD] for p in neg_class]
         zs = [p[COORDS][Z_COORD] for p in neg_class]
 
-        ax.plot(xs, ys, zs, 'g.', markersize=3)
+        ax.plot(xs, ys, zs, '.', markersize=3)
 
         xs = [p[COORDS][X_COORD] for p in pos_class]
         ys = [p[COORDS][Y_COORD] for p in pos_class]
