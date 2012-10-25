@@ -1,6 +1,27 @@
 """
 Module for processing the given log data. Bundles in parsing and some generic
 functions for manipulating the data.
+
+To do something useful with this module, initialize it like so:
+
+    >>> log1 = LogData('oakland_part3_am_rf.node_features')
+
+At this point, you can access the parsed data through the 'data' attribute:
+
+    >>> for label, feature_vector, coordinates in log1.data:
+    >>>     print feature_vector
+
+Or if you want to get specific classes of data, you can do:
+    
+    >>> specific_classes = log1.filter_data((GROUND, FACADE, WIRE))
+
+which you can do the same as above:
+
+    >>> for label, feature_vector, coordinates in specific_classes:
+    >>>     print feature_vector
+
+obviously, there will be fewer feature_vectors in this case, because we've
+filtered the list to the 3 classes we specified.
 """
 import numpy as np
 import pdb
