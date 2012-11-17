@@ -47,7 +47,7 @@ class LogData:
         nodes = []
         for node in data:
             label = int(node[4])
-            features = map(float, node[5:])
+            features = map(float, node[5:-1])
             coord = map(float, node[0:3])
             nodes.append((label, features, coord))
         return nodes

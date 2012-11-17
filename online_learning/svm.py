@@ -5,9 +5,11 @@ import pdb
 import numpy as np
 import matplotlib.pyplot as plt
 import pdb
+import itertools
 from mpl_toolkits.mplot3d import Axes3D
 from log import LogData
-from constants import (COORDS, X_COORD, Y_COORD, Z_COORD, GROUND, FACADE)
+from constants import (COORDS, X_COORD, Y_COORD, Z_COORD, VEG, WIRE, POLE,
+                       GROUND, FACADE)
 LAMBDA = .9
 
 class SVM:
@@ -22,9 +24,15 @@ class SVM:
         return
 
     def normalize_features(self):
-        mean_v = sum([p[1] for p in self.nodes])/len(self.nodes)
-        std_dev = np.std([p[1] for p in self.nodes])
-        self.nodes = [(p[0], (p[1]- mean_v)/std_dev, p[2]) for p in self.nodes]
+        """
+        self.nodes = [ (label, [features]), ... ]
+        """
+        features = np.array([p[1] for p in self.nodes])
+        features = features - np.mean(features, axis=0)
+        features = features / np.std(features, axis=0)
+        for (idx, p) in enumerate(self.nodes):
+            self.nodes[idx] = (self.nodes[idx][0], features[idx],
+                               self.nodes[idx][2])
         return
 
     def fit(self):
@@ -52,11 +60,22 @@ class SVM:
     def predict(self, feature):
         return np.dot(self.w, feature)
 
-    def predict_and_plot(self, test_data, ax):
+    def predict_and_plot(self, test_data, ax, label_order):
+        """
+        test_data is a data structure that looks like:
+            [(label, features), ...]
+        """
         neg_class = []
         pos_class = []
+        wrong_labels = 0
+        labels = {-1: label_order[0],
+                  1: label_order[1]}
         for el in test_data:
-            if self.predict(el[1]) < 0:
+            prediction = -1 if self.predict(el[1]) < 0 else 1
+            if labels[prediction] != el[0]:
+                wrong_labels += 1
+
+            if prediction < 0:
                 neg_class.append(el)
             else:
                 pos_class.append(el)
@@ -73,16 +92,24 @@ class SVM:
 
         ax.plot(xs, ys, zs, '.', markersize=3)
 
+        print "Comparing %s" % str(label_order)
+        print "Accuracy: %.1f%%" % ((1 - wrong_labels / (1. * len(test_data))) *
+                                100)
+
 if __name__ == '__main__':
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
 
     # we train on log1, then classify log2
     log1 = LogData('oakland_part3_am_rf.node_features')
     log2 = LogData('oakland_part3_an_rf.node_features')
     
-    svm = SVM(log1, (GROUND, FACADE))
-    test_classes = log2.filter_data((GROUND, FACADE))
-    svm.predict_and_plot(test_classes, ax)
+    labels = [GROUND, FACADE, POLE, WIRE, VEG]
+    
+    for combo in itertools.combinations(labels, 2):
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        svm = SVM(log1, combo)
+        label_order = combo
+        test_classes = log2.filter_data(label_order)
+        svm.predict_and_plot(test_classes, ax, label_order)
 
     plt.show()
